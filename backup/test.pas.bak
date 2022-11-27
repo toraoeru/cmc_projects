@@ -1,0 +1,75 @@
+{program calc;
+
+Uses Sysutils;
+
+const
+    FNAME = 'input.txt';
+var 
+    precision: real; i: Integer;
+    num_bases: array of Integer;
+    infile: TextFiles; str: String;
+begin
+    precision := StrToFloat(paramStr(1));
+    setLength(num_bases, paramCount());
+	for i := 2 to paramCount() do begin
+        num_bases[i] := StrToInt(paramStr(i));
+		writeLn(num_bases[i]);
+	end;
+
+    
+    AssignFile(infile, FNAME);
+    reset(infile);
+    while not eof(infile) do begin
+        readln(infile, str);
+        writeln(s);   
+    end;
+
+    CloseFile(tfIn);
+end.
+}
+program ReadFile;
+
+uses
+ Sysutils;
+
+const
+  C_FNAME = 'input.txt';
+
+var
+  tfIn: TextFile;
+  s: string;
+
+begin
+  // Вывод некой информации
+  writeln('Чтение содержимого файла: ', C_FNAME);
+  writeln('=========================================');
+
+  // Связываем имя файла с переменной
+  AssignFile(tfIn, C_FNAME);
+
+  // Для обработки исключений, используем блок try/except
+  try
+    // Открыть файл для чтения
+    reset(tfIn);
+
+    // Считываем строки, пока не закончится файл
+    while not eof(tfIn) do
+    begin
+      readln(tfIn, s);
+      writeln(s);
+    end;
+
+    // Готово. Закрываем файл.
+    CloseFile(tfIn);
+
+  except
+    on E: EInOutError do
+     writeln('Ошибка обработки файла. Детали: ', E.Message);
+  end;
+
+  // Выводим результат операции и ожидаем нажатие Enter
+  writeln('=========================================');
+  writeln('Файл ', C_FNAME, ' считан. Нажмите ВВОД для выхода.');
+  readln;
+end.
+
