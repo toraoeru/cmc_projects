@@ -77,7 +77,7 @@ begin
                         //какой-нибудь поиск в ширину?? idk
                     '5':
                         //анлалогично 4
-                end;}
+                end;dfdhasdjf}
             end; 
         end;
     end;
