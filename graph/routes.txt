@@ -1,4 +1,4 @@
-# Описание некоторого простейшего графаqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
+# Описание некоторого простейшего графа
 # поля: "from_city" "to_city" "transport_type" cruise_time cruise_fare
 "Москва" "Санкт-Петербург" "самолјт" 60 7000
 "Санкт-Петербург" "Москва" "самолјт" 60 7500
