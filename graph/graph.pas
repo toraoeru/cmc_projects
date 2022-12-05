@@ -1,13 +1,21 @@
 program map;
 
 Uses 
-    Crt;
+    sysutils;
+
+type edge = record 
+    city_to: integer;
+    tr_name: integer;
+    tc:real; mc: real; 
+end;
 
 type city = record
     namec: integer; 
-    type edge = record city_to: ^city; tr_name: integer; tc:real; mc: real; end;
     edges: array of edge;
 end;
+
+type
+    STATES = (ST_EXP, CL_QUOTES_EXP, NUM_EXP);
 
 var cities: array of city;
 
@@ -25,16 +33,15 @@ end;
 
 procedure read_graph();
 var 
-    routes: text; str: string; num_str, i: integer;
-    st_mark: string; city_from: array of char; flag: boolean;
-    city_to: array of char; transport: array of char;
-    name_len: integer; time_cost: real; money_cost: real;
-    names: array[1..3] of array of char; nums: array[1..2] of integer;
+    routes: TextFile; num_str, i, stage, name_len: integer; st_mark, error_: string;
+    flag, p_been: boolean; names: array[1..3] of array of char; 
+    nums: array[1..2] of real; c: char; state: STATES;
 begin
-    stage := 1; st_mark := '"'; city_to := '';
-    num_str := 1; city_from := ''; name_len := 0; 
-    transport := '';
-
+    stage := 1; st_mark := '"'; names[1] := '';
+    num_str := 1; names[2] := ''; name_len := 0; 
+    names[3] := ''; p_been := false; flag := true;
+    state := ST_EXP;
+    
     if (paramCount() <> 0) then 
     begin
         assign(routes, paramStr(1));
@@ -42,26 +49,27 @@ begin
         if (IOresult = 0) then begin
             while flag and not eof() do 
             begin
+                writeln('in while');
                 case state of
                     ST_EXP:
                     begin
-                        if not eoln() then 
+                        if not eoln(routes) then 
                         begin
-                            read(c);
+                            read(routes, c);
                             if (c <> ' ') and (c <> st_mark) then begin
                                 error_ := 'INVALID OFF-RECORD CHARACTER IN ' + IntToStr(num_str);
                                 flag := false;
                             end
                             else if in_str(c, st_mark) and (st_mark = '"') then
-                                state := CL_QUOTES_EXP;
+                                state := CL_QUOTES_EXP
                             else if in_str(c, st_mark) and (st_mark <> '"') then begin
                                 state := NUM_EXP;
-                                nums[stage - 3] := ord(c) - 48;
+                                nums[stage - 3] := StrToInt(c);
                             end;
                         end
                         else begin
                             if stage = 1 then begin
-                                readln(); num_str := num_str + 1;
+                                readln(routes); num_str := num_str + 1;
                             end
                             else 
                                 error_ := 'UNEXPECTED LINE BREAK ' + IntToStr(num_str);
@@ -70,16 +78,14 @@ begin
                         end;
                         CL_QUOTES_EXP:
                         begin
-                            if not eoln() then 
+                            if not eoln(routes) then 
                             begin
-                                read(c);
+                                read(routes, c);
                                 if c <> '"' then 
                                 begin
                                     name_len := name_len + 1;
-                                    names[stage, name_len] := c; {
-                                    if stage = 1 then city_from[name_len] := c
-                                    else if stage = 2 then city_to[name_len] := c
-                                    else if stage = 3 then transport[name_len] := c;}
+                                    names[stage, name_len] := c
+                                end
                                 else begin
                                     if name_len = 0 then begin
                                         if stage < 3 then error_ := 'NAME OF CITY NOT FOUND IN ' + IntToStr(num_str)
@@ -88,37 +94,48 @@ begin
                                     end
                                     else begin
                                         setLength(names[stage], name_len);
-                                        {if stage = 1 then setLength(city_from, name_len)
-                                        else if stage = 2 then setLength(city_to, name_len)
-                                        else if stage = 3 then setLength(transport, name_len);}
                                         {заполняем структуру}
                                         state := ST_EXP; stage := stage + 1; name_len := 0;
                                     end;
                                 end;
+                            end
+                            else begin
+                                error_ := 'UNEXPECTED LINE BREAK ' + IntToStr(num_str);
+                                flag := false;
                             end;
                         end;
                         NUM_EXP:
                         begin
-                            if 
+                            if (eoln(routes)) and (stage = 5) and (nums[2] <> 0) then begin
+                                readln(routes);
+                                num_str := num_str + 1;
+                            end
+                            else if eoln(routes) then begin
+                                error_ := 'UNEXPECTED LINE BREAK ' + IntToStr(num_str);
+                                flag := false;
+                            end
+                            else 
+                                read(routes, c);
+                                i := 1;
+                                if (c >= '0') and (c <= '9') then 
+                                begin
+                                    if not p_been then
+                                        nums[stage - 3] := nums[stage - 3] * 10 + StrToInt(c)
+                                    else begin 
+                                        i := i + 1;
+                                        nums[stage - 3] := nums[stage - 3] + StrToInt(c) / exp(ln(10) * i);
+                                    end;
+                                end
+                                else if c = ' ' then begin state := ST_EXP; stage := stage + 1; end
+                                else if (c = '.') and (not p_been) then p_been := true
+                                else begin 
+                                    error_ := 'INVALID CHAR IN COST IN ' + IntToStr(num_str);
+                                    flag := false;
+                                end;
                         end;
-                    
-                
+                end;    
                 write(error_);
-                end;
-
-
-                readln(routes, str);
             end;
-            reset(routes);
-            setLength(graph, num_str);
-            for i := 1 to num_str do begin
-                with graph[i] do
-                begin
-                    {считываем данные из файла в структуру / в отдельный массив виды транспорта}
-                end;
-            end;            
-            read(routes, str);
-            writeln(str, num_str);
         end
         else
             writeln('file not found');
@@ -132,11 +149,11 @@ var
     state, oper_mode: char; 
 begin
     state := '0';
-    read_graph();
+    
     while (state = '0') do 
     begin
         writeln('what do you want to do?(enter a number)', #10#13, '0. start', #10#13, '1. close');
-        write('>'); read(state); readln;
+        write('>'); read(state); readln();
         if (state <> '0') and (state <> '1') then
             writeln('wrong input')
         else if (state = '0') then begin
@@ -146,10 +163,11 @@ begin
             writeln('3. Find the path between 2 cities minimum by the number of cities visited.');
             writeln('4. Find a set of cities reachable from the city of departure for no more than limit_cost money.');
             writeln('5. Find a set of cities reachable from the senders city in no more than limit_time of time.');
-            write('>'); read(oper_mode); readln;
+            write('>'); read(oper_mode); readln();
             if (oper_mode < '1') or (oper_mode > '5') then//23и 
                 writeln('wrong input')
             else begin
+                read_graph();
                 writeln('enter the type of transport you want to exclude');
                 //принтуем доступные виды транспорта , просим ввести , обрабатываем 
                { case oper_mode of

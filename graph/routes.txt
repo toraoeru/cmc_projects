@@ -1,23 +1,21 @@
-# Описание некоторого простейшего графа
-# поля: "from_city" "to_city" "transport_type" cruise_time cruise_fare
-"Москва" "Санкт-Петербург" "самолјт" 60 7000
-"Санкт-Петербург" "Москва" "самолјт" 60 7500
-"Москва" "Тверь" "поезд" 180 200
-"Тверь" "Москва" "поезд" 200 200
-"Тверь" "Бологое" "поезд" 120 150
-"Бологое" "Тверь" "поезд" 120 150
-"Бологое" "Новгород Великий" "поезд" 140 250
-"Новгород Великий" "Бологое" "поезд" 140 250
-"Бологое" "Санкт-Петербург" "поезд" 240 400
-"Санкт-Петербург" "Бологое" "поезд" 240 400
-"Москва" "Тверь" "автобус" 240 600
-"Тверь" "Москва" "автобус" 240 600
-"Тверь" "Новгород Великий" "автобус" 240 600
+"Moscow" "Saint Petersburg" "samoljt" 60 7000
+"Saint Petersburg" "Moscow" "airplane" 60 7500
+"Moscow" "Tver" "train" 180 200
+"Tver" "Moscow" "train" 200 200
+"Tver" "Bologoe" "train" 120 150
+"Bologoe" "Tver" "train" 120 150
+"Bologoe" "Novgorod the Great" "train" 140 250
+"Novgorod the Great" "Bologoe" "train" 140 250
+"Bologoe" "Saint Petersburg" "train" 240 400
+"Saint Petersburg" "Bologoe" "train" 240 400
+"Moscow" "Tver" "bus" 240 600
+"Tver" "Moscow" "bus" 240 600
+"Tver" "Novgorod the Great" "bus" 240 600
 #
-# обратного рейса автобуса нет
+# there is no bus return flight
 #
-"Санкт-Петербург" "Тверь" "автобус" 420 3000 # да дороговато будет.
-"Новгород Великий" "Санкт-Петербург" "автобус" 180 500
-"Санкт-Петербург" "Новгород Великий" "автобус" 180 500
-"Санкт-Петербург" "Бологое" "автобус" 180 1000
-"Бологое" "Санкт-Петербург" "автобус" 180 1000
+"Saint Petersburg" "Tver" "bus" 420 3000 # yes it will be expensive.
+"Novgorod the Great" "Saint Petersburg" "bus" 180 500
+"Saint Petersburg" "Novgorod the Great" "bus" 180 500
+"Saint Petersburg" "Bologoe" "bus" 180 1000
+"Bologoe" "Saint Petersburg" "bus" 180 1000
