@@ -1,3 +1,6 @@
+#
+# there is no bus return flight
+#
 "Moscow" "Saint Petersburg" "samoljt" 60 7000
 "Saint Petersburg" "Moscow" "airplane" 60 7500
 "Moscow" "Tver" "train" 180 200
@@ -11,9 +14,6 @@
 "Moscow" "Tver" "bus" 240 600
 "Tver" "Moscow" "bus" 240 600
 "Tver" "Novgorod the Great" "bus" 240 600
-#
-# there is no bus return flight
-#
 "Saint Petersburg" "Tver" "bus" 420 3000 # yes it will be expensive.
 "Novgorod the Great" "Saint Petersburg" "bus" 180 500
 "Saint Petersburg" "Novgorod the Great" "bus" 180 500
