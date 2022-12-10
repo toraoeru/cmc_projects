@@ -18,7 +18,7 @@ edge = record
 end;
 
 var 
-    graph: array of edge; cities, transport: array of array of char;
+    graph: array of edge; cities, types_transport: array of array of char;
 
 function min_of_int(n1, n2: integer): integer;
 begin
@@ -70,7 +70,7 @@ var
 begin
     stage := 1; st_mark := '"'; num_str := 1; name_len := 0; p_been := false; 
     state := ST_EXP; city_from := ''; city_to := ''; flag := true; n_str := 0;
-    transport := ''; i := 1; setLength(city_from, 512); n_cities := 0;
+    transport := ''; i := 1; setLength(city_from, 512); n_cities := 0; n_tr := 0;
     setLength(city_to, 512); setLength(transport, 512); error_ := '';
 
     if (paramCount() <> 0) then 
@@ -124,7 +124,6 @@ begin
                     end;
                     CL_QUOTES_EXP:
                     begin
-                        //write(2, '_', c, '   ');
                         read_lbr(routes, c, num_str, flag, error_);
                         if c <> '"' then 
                         begin
@@ -150,20 +149,29 @@ begin
                     end;
                     NUM_EXP:
                     begin
-                        //write(3, '_', c, '   ');
                         read(routes, c);
-                        if (stage = 5) and (nums[2] <> 0) and (eoln(routes) or (c = '#')) then begin
+                        if (stage = 5) and (nums[2] <> 0) and (eoln(routes) or (c = '#') or c = ' ') then begin
                             if not in_ar(city_from, cities) then begin
-                                n_cities := n_cities + 1;
-                                cities[n_cities] := city_from;
+                                n_cities := n_cities + 1; cities[n_cities] := city_from;
                                 setLength(cities[n_cities], length(city_from));
-                                cities[n_cities, length(city_from)] := city_from[length(city_from)];
-                                for i := 0 to length(cities[n_cities]) do
-                                    write(cities[n_cities, i]);
-                                    //write('_', city_from[i], '_', cities[n_cities, i], '_');
-                                writeln();
+                                //cities[n_cities, length(city_from)] := city_from[length(city_from)];
                             end;
-                            //не читает последнюю букву, перенос строки
+                            
+                            for i := 0 to length(transport) - 1 do 
+                                write('_', transport[i], '_');
+                            writeln();
+                            write(in_ar(transport, types_transport), ' ');
+                            {
+                            if not in_ar(transport, types_transport) then begin
+                                n_tr := n_tr + 1; types_transport[n_tr] := transport;
+                                setLength(types_transport[n_tr], length(transport));
+                                types_transport[n_tr, length(transport)] := transport[length(transport)];
+                                for i := 0 to length(types_transport[n_tr]) do 
+                                    write(types_transport[n_tr, i]);
+                                writeln();
+                            end;}
+
+
                             readln(routes); city_from := ''; city_to := ''; name_len := 0; 
                             transport := ''; p_been := false; nums[1] := 0; nums[2] := 0;
                             num_str := num_str + 1; state := ST_EXP; st_mark := '"'; stage := 1;
@@ -177,8 +185,7 @@ begin
                             if (c >= '0') and (c <= '9') then 
                             begin
                                 if nums[stage - 3] * 10 + StrToInt(c) < maxInt then begin
-                                    if not p_been then
-                                        nums[stage - 3] := nums[stage - 3] * 10 + StrToInt(c)
+                                    if not p_been then nums[stage - 3] := nums[stage - 3] * 10 + StrToInt(c)
                                     else begin 
                                         i := i + 1;
                                         nums[stage - 3] := nums[stage - 3] + StrToInt(c) / exp(ln(10) * i);
@@ -199,11 +206,16 @@ begin
                                     n_cities := n_cities + 1;
                                     cities[n_cities] := city_from;
                                     setLength(cities[n_cities], length(city_from));
-                                    for i := 0 to length(cities[n_cities]) do 
-                                        write(cities[n_cities, i]);
-                                        //write('_', city_from[i], '_', cities[n_cities, i], '_');
-                                    writeln();
                                 end;
+                                {if not in_ar(transport, types_transport) then begin
+                                    n_tr := n_tr + 1; types_transport[n_tr] := transport;
+                                    setLength(types_transport[n_tr], length(transport));
+                                    types_transport[n_tr, length(transport)] := transport[length(transport)];
+                                    for i := 0 to length(types_transport[n_tr]) do 
+                                        write(types_transport[n_tr, i]);
+                                    writeln();
+                                end;}
+
                                 readln(routes); city_from := ''; city_to := ''; name_len := 0; 
                                 transport := ''; p_been := false; nums[1] := 0; nums[2] := 0;
                                 num_str := num_str + 1; state := ST_EXP; st_mark := '"'; stage := 1;
