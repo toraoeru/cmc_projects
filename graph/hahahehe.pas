@@ -6,6 +6,8 @@ Uses
 type
     STATES = (ST_EXP, CL_QUOTES_EXP, NUM_EXP);
 
+type arr = array of array of char;
+
 type link = ^edge;
 
 edge = record 
@@ -18,6 +20,12 @@ end;
 var 
     graph: array of edge; cities, transport: array of array of char;
 
+function min_of_int(n1, n2: integer): integer;
+begin
+    if n1 > n2 then min_of_int := n2
+    else min_of_int := n1;
+end;
+
 function in_str(ch: char; str: string): boolean;
 var i: integer;
 begin
@@ -28,15 +36,21 @@ begin
     end;
 end;
 
-function in_ar(el: array of char; ar: array of array of char): boolean;
-var i: integer;
+function in_ar(el: array of char; ar: arr): boolean;
+var i, j, flag: integer;
 begin
     in_ar := false;
-    for i := 1 to length(ar) do 
+    for i := 0 to length(ar) - 1 do 
     begin
-        if el = ar[i] then in_ar := true;
+        flag := 0;
+        if min_of_int(length(el), length(ar[i])) <> 0 then 
+            flag := 1;
+            for j := 0 to min_of_int(length(el), length(ar[i])) - 1 do begin
+                if el[j] <> ar[i, j] then flag := 0
+            end;
+        if flag = 1 then in_ar := true;
     end;
-end; 
+end;
 
 procedure read_lbr(var file_: text; var c: char; var num_str: integer; var flag: boolean; var error_: string);
 begin
@@ -50,23 +64,32 @@ end;
 
 procedure read_graph();
 var 
-    routes: text; num_str, i, stage, name_len, n_uniq: integer; st_mark, error_: string;
+    routes: text; num_str, i, stage, name_len, n_cities, n_tr, n_str: integer; 
     flag, p_been: boolean; nums: array[1..2] of real; c: char; state: STATES;
-    city_from, city_to, transport: array of char;
+    city_from, city_to, transport: array of char; st_mark, error_: string;
 begin
-    stage := 1; st_mark := '"';
-    num_str := 1; name_len := 0; p_been := false; flag := true;
-    state := ST_EXP; city_from := ''; city_to := '';
-    transport := ''; i := 1;
-    setLength(city_from, 512);
-    setLength(city_to, 512);
-    setLength(transport, 512);
+    stage := 1; st_mark := '"'; num_str := 1; name_len := 0; p_been := false; 
+    state := ST_EXP; city_from := ''; city_to := ''; flag := true; n_str := 0;
+    transport := ''; i := 1; setLength(city_from, 512); n_cities := 0;
+    setLength(city_to, 512); setLength(transport, 512); error_ := '';
 
     if (paramCount() <> 0) then 
     begin
         assign(routes, paramStr(1));
         {$I-} reset(routes); {$I+}
         if (IOresult = 0) then begin
+            while not eof(routes) do begin
+                if eoln(routes) then begin
+                    readln(routes);
+                    n_str := n_str + 1;
+                end;
+                read(routes, c);
+            end;
+            setLength(cities, n_str); setLength(transport, n_str);
+            for i := 0 to n_str - 1  do 
+                setLength(cities[i], 0);
+            reset(routes); c := ' ';
+
             while flag and not eof(routes) do 
             begin          
                 case state of
@@ -105,10 +128,10 @@ begin
                         read_lbr(routes, c, num_str, flag, error_);
                         if c <> '"' then 
                         begin
-                            name_len := name_len + 1;
                             if stage = 1 then city_from[name_len] := c
                             else if stage = 2 then city_to[name_len] := c
                             else if stage = 3 then transport[name_len] := c;
+                            name_len := name_len + 1;
                         end
                         else begin
                             if name_len = 0 then begin
@@ -130,13 +153,17 @@ begin
                         //write(3, '_', c, '   ');
                         read(routes, c);
                         if (stage = 5) and (nums[2] <> 0) and (eoln(routes) or (c = '#')) then begin
-                            for i := 1 to length(city_from) do write(city_from[i]);
-                            write('        ');
-                            for i := 1 to length(city_to) do write(city_to[i]);   
-                            write('        ');
-                            for i := 1 to length(transport) do write(transport[i]); 
-                            writeln();
-
+                            if not in_ar(city_from, cities) then begin
+                                n_cities := n_cities + 1;
+                                cities[n_cities] := city_from;
+                                setLength(cities[n_cities], length(city_from));
+                                cities[n_cities, length(city_from)] := city_from[length(city_from)];
+                                for i := 0 to length(cities[n_cities]) do
+                                    write(cities[n_cities, i]);
+                                    //write('_', city_from[i], '_', cities[n_cities, i], '_');
+                                writeln();
+                            end;
+                            //не читает последнюю букву, перенос строки
                             readln(routes); city_from := ''; city_to := ''; name_len := 0; 
                             transport := ''; p_been := false; nums[1] := 0; nums[2] := 0;
                             num_str := num_str + 1; state := ST_EXP; st_mark := '"'; stage := 1;
@@ -168,6 +195,15 @@ begin
                             end
                             else if (c = ' ') and (stage = 5) then
                             begin
+                                if not in_ar(city_from, cities) then begin
+                                    n_cities := n_cities + 1;
+                                    cities[n_cities] := city_from;
+                                    setLength(cities[n_cities], length(city_from));
+                                    for i := 0 to length(cities[n_cities]) do 
+                                        write(cities[n_cities, i]);
+                                        //write('_', city_from[i], '_', cities[n_cities, i], '_');
+                                    writeln();
+                                end;
                                 readln(routes); city_from := ''; city_to := ''; name_len := 0; 
                                 transport := ''; p_been := false; nums[1] := 0; nums[2] := 0;
                                 num_str := num_str + 1; state := ST_EXP; st_mark := '"'; stage := 1;
@@ -175,7 +211,7 @@ begin
                             end
                             else if (c = '.') and (not p_been) then p_been := true
                             else begin 
-                                error_ := IntToStr(ord(c)) + 'INVALID CHAR IN COST IN ' + IntToStr(num_str);
+                                error_ := 'INVALID CHAR IN COST IN ' + IntToStr(num_str);
                                 flag := false;
                             end;
                         end;
