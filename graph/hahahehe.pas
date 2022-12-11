@@ -11,14 +11,18 @@ type arr = array of array of char;
 type link = ^edge;
 
 edge = record 
-    namec: integer;
-    city_to: link;
+    _to: link;
     tr_name: integer;
     tc: real; mc: real; 
 end;
 
+type vertex = record 
+    namec: integer;
+    edges: array of edge;
+end;
+
 var 
-    graph: array of edge; cities, types_transport: array of array of char;
+    graph: array of vertex;  cities, types_transport: array of array of char; n_links: array of integer;
 
 function min_of_int(n1, n2: integer): integer;
 begin
@@ -36,19 +40,19 @@ begin
     end;
 end;
 
-function in_ar(el: array of char; ar: arr): boolean;
-var i, j, flag: integer;
+function pos_d_arr(el: array of char; ar: arr): integer;
+var i, j, res: integer;
 begin
-    in_ar := false;
+    pos_d_arr := -1;
     for i := 0 to length(ar) - 1 do 
     begin
-        flag := 0;
+        res := -1;
         if min_of_int(length(el), length(ar[i])) <> 0 then 
-            flag := 1;
+            res := i;
             for j := 0 to min_of_int(length(el), length(ar[i])) - 1 do begin
-                if el[j] <> ar[i, j] then flag := 0
+                if el[j] <> ar[i, j] then res := -1
             end;
-        if flag = 1 then in_ar := true;
+        if res <> -1 then pos_d_arr := res;
     end;
 end;
 
@@ -66,7 +70,7 @@ procedure read_graph();
 var 
     routes: text; num_str, i, stage, name_len, n_cities, n_tr, n_str: integer; 
     flag, p_been: boolean; nums: array[1..2] of real; c: char; state: STATES;
-    city_from, city_to, transport: array of char; st_mark, error_: string;
+    city_from, city_to, transport: array of char; st_mark, error_: string; city: vertex;
 begin
     stage := 1; st_mark := '"'; num_str := 1; name_len := 0; p_been := false; 
     state := ST_EXP; city_from := ''; city_to := ''; flag := true; n_str := 0;
@@ -85,9 +89,13 @@ begin
                 end;
                 read(routes, c);
             end;
-            setLength(cities, n_str); setLength(transport, n_str);
-            for i := 0 to n_str - 1  do 
+
+            setLength(cities, n_str); setLength(types_transport, n_str);
+            setLength(n_links, n_str);
+            for i := 0 to n_str - 1  do begin
                 setLength(cities[i], 0);
+                n_links[i] := 0;
+            end;
             reset(routes); c := ' ';
 
             while flag and not eof(routes) do 
@@ -95,7 +103,6 @@ begin
                 case state of
                     ST_EXP:
                     begin
-                        //write(1, '_', c, '   ');
                         read(routes, c);
                         if (not eoln(routes)) and (c <> '#') then 
                         begin
@@ -150,27 +157,38 @@ begin
                     NUM_EXP:
                     begin
                         read(routes, c);
-                        if (stage = 5) and (nums[2] <> 0) and (eoln(routes) or (c = '#') or c = ' ') then begin
-                            if not in_ar(city_from, cities) then begin
+                        if (stage = 5) and (nums[2] <> 0) and (eoln(routes) or (c = '#') or (c = ' ')) then begin
+                            if pos_d_arr(transport, types_transport) = -1 then begin
+                                n_tr := n_tr + 1;  types_transport[n_tr] := transport;
+                                setLength(types_transport[n_tr], length(transport));
+                            end;
+
+                            if pos_d_arr(city_to, cities) = -1 then begin
+                                n_cities := n_cities + 1; cities[n_cities] := city_to;
+                                setLength(cities[n_cities], length(city_to));
+                                city.namec := pos_d_arr(city_from, cities);
+                                {new(graph[n_cities]); graph[n_cities]^.namec := pos_d_arr(city_to, cities);}
+                            end;
+
+                            if pos_d_arr(city_from, cities) = -1 then begin
                                 n_cities := n_cities + 1; cities[n_cities] := city_from;
                                 setLength(cities[n_cities], length(city_from));
-                                //cities[n_cities, length(city_from)] := city_from[length(city_from)];
+                                {new(graph[n_cities]); graph[n_cities].namec := pos_d_arr(city_from, cities);}
+                                city.namec := pos_d_arr(city_from, cities);
                             end;
                             
-                            for i := 0 to length(transport) - 1 do 
-                                write('_', transport[i], '_');
-                            writeln();
-                            write(in_ar(transport, types_transport), ' ');
-                            {
-                            if not in_ar(transport, types_transport) then begin
-                                n_tr := n_tr + 1; types_transport[n_tr] := transport;
-                                setLength(types_transport[n_tr], length(transport));
-                                types_transport[n_tr, length(transport)] := transport[length(transport)];
-                                for i := 0 to length(types_transport[n_tr]) do 
-                                    write(types_transport[n_tr, i]);
-                                writeln();
-                            end;}
+                            city.edges[n_links[n_links[pos_d_arr(city_from, cities)]]]._to := @graph[pos_d_arr(city_to, cities)];
+                            city.edges[n_links[n_links[pos_d_arr(city_from, cities)]]].tr_name := pos_d_arr(transport, types_transport);
+                            city.edges[n_links[n_links[pos_d_arr(city_from, cities)]]].tc := nums[1];
+                            city.edges[n_links[n_links[pos_d_arr(city_from, cities)]]].mc := nums[2];
+                            graph[n_cities] := city;
+                            {(graph[pos_d_arr(city_from, cities)]).edges[n_links[pos_d_arr(city_from, cities)]]._to := graph[pos_d_arr(city_to, cities)];
+                            graph[pos_d_arr(city_from, cities)].edges[n_links[pos_d_arr(city_from, cities)]].tr_name := transport;
+                            graph[pos_d_arr(city_from, cities)].edges[n_links[pos_d_arr(city_from, cities)]].tc := num[1];
+                            graph[pos_d_arr(city_from, cities)].edges[n_links[pos_d_arr(city_from, cities)]].mc := num[2];}
 
+
+                            n_links[pos_d_arr(city_from, cities)] := n_links[pos_d_arr(city_from, cities)] + 1;
 
                             readln(routes); city_from := ''; city_to := ''; name_len := 0; 
                             transport := ''; p_been := false; nums[1] := 0; nums[2] := 0;
@@ -200,27 +218,6 @@ begin
                             begin 
                                 state := ST_EXP; stage := stage + 1; p_been := false; i := 1;
                             end
-                            else if (c = ' ') and (stage = 5) then
-                            begin
-                                if not in_ar(city_from, cities) then begin
-                                    n_cities := n_cities + 1;
-                                    cities[n_cities] := city_from;
-                                    setLength(cities[n_cities], length(city_from));
-                                end;
-                                {if not in_ar(transport, types_transport) then begin
-                                    n_tr := n_tr + 1; types_transport[n_tr] := transport;
-                                    setLength(types_transport[n_tr], length(transport));
-                                    types_transport[n_tr, length(transport)] := transport[length(transport)];
-                                    for i := 0 to length(types_transport[n_tr]) do 
-                                        write(types_transport[n_tr, i]);
-                                    writeln();
-                                end;}
-
-                                readln(routes); city_from := ''; city_to := ''; name_len := 0; 
-                                transport := ''; p_been := false; nums[1] := 0; nums[2] := 0;
-                                num_str := num_str + 1; state := ST_EXP; st_mark := '"'; stage := 1;
-                                setLength(city_from, 512); setLength(city_to, 512); setLength(transport, 512);
-                            end
                             else if (c = '.') and (not p_been) then p_been := true
                             else begin 
                                 error_ := 'INVALID CHAR IN COST IN ' + IntToStr(num_str);
@@ -232,6 +229,7 @@ begin
                 write(error_);
                 if stage > 3 then st_mark := '0123456789';
             end;
+            setLength(cities, n_cities); setLength(types_transport, n_tr);
         end
         else writeln('file not found');
     end

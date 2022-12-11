@@ -22,20 +22,19 @@ begin
     end;
 end;
 
-function in_ar(el: array of char; ar: arr): boolean;
-var i, j, flag: integer;
+function pos_d_arr(el: array of char; ar: arr): integer;
+var i, j, res: integer;
 begin
-    in_ar := false;
+    pos_d_arr := -1;
     for i := 0 to length(ar) - 1 do 
     begin
-        flag := 0;
+        res := -1;
         if min_of_int(length(el), length(ar[i])) <> 0 then 
-            flag := 1;
+            res := i;
             for j := 0 to min_of_int(length(el), length(ar[i])) - 1 do begin
-                writeln(el[j], ' ', ar[i, j]);
-                if el[j] <> ar[i, j] then flag := 0
+                if el[j] <> ar[i, j] then res := -1
             end;
-        if flag = 1 then in_ar := true;
+        if res <> -1 then pos_d_arr := res;
     end;
 end;
 
@@ -48,5 +47,18 @@ begin
     ar[1] := 'Tver';
     ar[2] := 'bologoe';
     //write(length(ar));
-    write(in_arr('Tver', ar));
+    write(pos_d_arr('bologoe', ar));
 end.
+{
+
+type link = ^edge;
+
+edge = record 
+    namec: integer;
+    city_to: link;
+    tr_name: integer;
+    tc: real; mc: real; 
+end;
+
+var 
+    graph: array of edge; cities, types_transport: array of array of char;}
