@@ -39,15 +39,11 @@ begin
 end;
 
 
-var ar: array of array of char; i: integer; q, a: mas;
+var i: integer; q, a: mas; ar: array[1..4] of integer := (1, 2, 3, 4);
 begin
-    q := 'Mos';
-    a := 'Fas';
-    SetLength(ar, 10);
-    ar[1] := 'Tver';
-    ar[2] := 'bologoe';
     //write(length(ar));
-    write(pos_d_arr('bologoe', ar));
+    //ar := (1; 2; 3; 4);
+    write(ar[2]);
 end.
 {
 

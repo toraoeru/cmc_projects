@@ -8,10 +8,10 @@ type
 
 type arr = array of array of char;
 
-type link = ^edge;
+{type link = ^edge;
 
 edge = record 
-    _to: link;
+    _to: integer;
     tr_name: integer;
     tc: real; mc: real; 
 end;
@@ -19,10 +19,16 @@ end;
 type vertex = record 
     namec: integer;
     edges: array of edge;
+end;}
+
+type vertex = record 
+    namec: integer;
+    edges: array of array[1..4] of integer;
 end;
+//to, trans, tc, mc
 
 var 
-    graph: array of vertex;  cities, types_transport: array of array of char; n_links: array of integer;
+    graph: array of vertex; cities, types_transport: array of array of char; n_links: array of integer;
 
 function min_of_int(n1, n2: integer): integer;
 begin
@@ -69,7 +75,7 @@ end;
 procedure read_graph();
 var 
     routes: text; num_str, i, stage, name_len, n_cities, n_tr, n_str: integer; 
-    flag, p_been: boolean; nums: array[1..2] of real; c: char; state: STATES;
+    flag, p_been: boolean; nums: array[1..2] of integer; c: char; state: STATES;
     city_from, city_to, transport: array of char; st_mark, error_: string; city: vertex;
 begin
     stage := 1; st_mark := '"'; num_str := 1; name_len := 0; p_been := false; 
@@ -91,9 +97,10 @@ begin
             end;
 
             setLength(cities, n_str); setLength(types_transport, n_str);
-            setLength(n_links, n_str);
+            setLength(n_links, n_str); setLength(graph, n_str);
             for i := 0 to n_str - 1  do begin
                 setLength(cities[i], 0);
+                setLength(graph[i].edges, n_str);
                 n_links[i] := 0;
             end;
             reset(routes); c := ' ';
@@ -149,7 +156,6 @@ begin
                                 if stage = 1 then setLength(city_from, name_len)
                                 else if stage = 2 then setLength(city_to, name_len)
                                 else if stage = 3 then setLength(transport, name_len);
-                                {заполняем структуру}
                                 state := ST_EXP; stage := stage + 1; name_len := 0;
                             end;
                         end;
@@ -167,22 +173,35 @@ begin
                                 n_cities := n_cities + 1; cities[n_cities] := city_to;
                                 setLength(cities[n_cities], length(city_to));
                                 city.namec := pos_d_arr(city_from, cities);
+                                graph[n_cities].namec := pos_d_arr(city_from, cities);
+                                {graph[pos_d_arr(city_to, cities)].namec := pos_d_arr(city_to, cities); }
                                 {new(graph[n_cities]); graph[n_cities]^.namec := pos_d_arr(city_to, cities);}
                             end;
 
                             if pos_d_arr(city_from, cities) = -1 then begin
                                 n_cities := n_cities + 1; cities[n_cities] := city_from;
                                 setLength(cities[n_cities], length(city_from));
+                                graph[n_cities].namec := pos_d_arr(city_from, cities);
                                 {new(graph[n_cities]); graph[n_cities].namec := pos_d_arr(city_from, cities);}
-                                city.namec := pos_d_arr(city_from, cities);
+                                {city.namec := pos_d_arr(city_from, cities);}
                             end;
                             
-                            city.edges[n_links[n_links[pos_d_arr(city_from, cities)]]]._to := @graph[pos_d_arr(city_to, cities)];
+                            graph[n_cities].edges[n_links, 1] := pos_d_arr(city_to, cities);
+                            graph[n_cities].edges[n_links, 2] := pos_d_arr(transport, types_transport);
+                            graph[n_cities].edges[n_links, 3] := nums[1];
+                            graph[n_cities].edges[n_links, 4] := nums[2];
+                            // write(city.edges[n_links[n_links[pos_d_arr(city_from, cities)]]]._to, '--------');
+                            {city.edges[n_links[n_links[pos_d_arr(city_from, cities)]]]._to := @graph[pos_d_arr(city_to, cities)];
+                            writeln('im here');
                             city.edges[n_links[n_links[pos_d_arr(city_from, cities)]]].tr_name := pos_d_arr(transport, types_transport);
+                            writeln('im here');
                             city.edges[n_links[n_links[pos_d_arr(city_from, cities)]]].tc := nums[1];
+                            writeln('im here');
                             city.edges[n_links[n_links[pos_d_arr(city_from, cities)]]].mc := nums[2];
-                            graph[n_cities] := city;
-                            {(graph[pos_d_arr(city_from, cities)]).edges[n_links[pos_d_arr(city_from, cities)]]._to := graph[pos_d_arr(city_to, cities)];
+                            writeln('im here');
+                            graph[n_cities] := city;}
+                            
+                           {graph[pos_d_arr(city_from, cities)].edges[n_links[pos_d_arr(city_from, cities)]]._to := graph[pos_d_arr(city_to, cities)];
                             graph[pos_d_arr(city_from, cities)].edges[n_links[pos_d_arr(city_from, cities)]].tr_name := transport;
                             graph[pos_d_arr(city_from, cities)].edges[n_links[pos_d_arr(city_from, cities)]].tc := num[1];
                             graph[pos_d_arr(city_from, cities)].edges[n_links[pos_d_arr(city_from, cities)]].mc := num[2];}
@@ -204,10 +223,10 @@ begin
                             begin
                                 if nums[stage - 3] * 10 + StrToInt(c) < maxInt then begin
                                     if not p_been then nums[stage - 3] := nums[stage - 3] * 10 + StrToInt(c)
-                                    else begin 
+                                    {else begin 
                                         i := i + 1;
                                         nums[stage - 3] := nums[stage - 3] + StrToInt(c) / exp(ln(10) * i);
-                                    end;
+                                    end;}
                                 end
                                 else begin 
                                     error_ := 'COST IS TOO LARGE IN ' + IntToStr(num_str);
