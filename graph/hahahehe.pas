@@ -8,18 +8,6 @@ type
 
 type arr = array of array of char;
 
-{type link = ^edge;
-
-edge = record 
-    _to: integer;
-    tr_name: integer;
-    tc: real; mc: real; 
-end;
-
-type vertex = record 
-    namec: integer;
-    edges: array of edge;
-end;}
 
 type vertex = record 
     namec: integer;
@@ -174,40 +162,29 @@ begin
                                 setLength(cities[n_cities], length(city_to));
                                 city.namec := pos_d_arr(city_from, cities);
                                 graph[n_cities].namec := pos_d_arr(city_from, cities);
-                                {graph[pos_d_arr(city_to, cities)].namec := pos_d_arr(city_to, cities); }
-                                {new(graph[n_cities]); graph[n_cities]^.namec := pos_d_arr(city_to, cities);}
                             end;
 
                             if pos_d_arr(city_from, cities) = -1 then begin
                                 n_cities := n_cities + 1; cities[n_cities] := city_from;
                                 setLength(cities[n_cities], length(city_from));
                                 graph[n_cities].namec := pos_d_arr(city_from, cities);
-                                {new(graph[n_cities]); graph[n_cities].namec := pos_d_arr(city_from, cities);}
-                                {city.namec := pos_d_arr(city_from, cities);}
                             end;
                             
-                            graph[n_cities].edges[n_links, 1] := pos_d_arr(city_to, cities);
-                            graph[n_cities].edges[n_links, 2] := pos_d_arr(transport, types_transport);
-                            graph[n_cities].edges[n_links, 3] := nums[1];
-                            graph[n_cities].edges[n_links, 4] := nums[2];
-                            // write(city.edges[n_links[n_links[pos_d_arr(city_from, cities)]]]._to, '--------');
-                            {city.edges[n_links[n_links[pos_d_arr(city_from, cities)]]]._to := @graph[pos_d_arr(city_to, cities)];
-                            writeln('im here');
-                            city.edges[n_links[n_links[pos_d_arr(city_from, cities)]]].tr_name := pos_d_arr(transport, types_transport);
-                            writeln('im here');
-                            city.edges[n_links[n_links[pos_d_arr(city_from, cities)]]].tc := nums[1];
-                            writeln('im here');
-                            city.edges[n_links[n_links[pos_d_arr(city_from, cities)]]].mc := nums[2];
-                            writeln('im here');
-                            graph[n_cities] := city;}
+                            graph[n_cities].edges[n_links[pos_d_arr(city_from, cities)], 1] := pos_d_arr(city_to, cities);
+                            graph[n_cities].edges[n_links[pos_d_arr(city_from, cities)], 2] := pos_d_arr(transport, types_transport);
+                            graph[n_cities].edges[n_links[pos_d_arr(city_from, cities)], 3] := nums[1];
+                            graph[n_cities].edges[n_links[pos_d_arr(city_from, cities)], 4] := nums[2];
                             
-                           {graph[pos_d_arr(city_from, cities)].edges[n_links[pos_d_arr(city_from, cities)]]._to := graph[pos_d_arr(city_to, cities)];
-                            graph[pos_d_arr(city_from, cities)].edges[n_links[pos_d_arr(city_from, cities)]].tr_name := transport;
-                            graph[pos_d_arr(city_from, cities)].edges[n_links[pos_d_arr(city_from, cities)]].tc := num[1];
-                            graph[pos_d_arr(city_from, cities)].edges[n_links[pos_d_arr(city_from, cities)]].mc := num[2];}
-
-
                             n_links[pos_d_arr(city_from, cities)] := n_links[pos_d_arr(city_from, cities)] + 1;
+
+                            write('->');
+                            for i := 0 to n_str do
+                                write(graph[i].namec:1, '  ');
+                            writeln();
+                            for i := 0 to length(n_links) - 1 do 
+                                write(n_links[i], '  ');
+                            writeln();
+
 
                             readln(routes); city_from := ''; city_to := ''; name_len := 0; 
                             transport := ''; p_been := false; nums[1] := 0; nums[2] := 0;
@@ -248,13 +225,23 @@ begin
                 write(error_);
                 if stage > 3 then st_mark := '0123456789';
             end;
-            setLength(cities, n_cities); setLength(types_transport, n_tr);
+            setLength(cities, n_cities); setLength(types_transport, n_tr); setLength(graph, n_cities);
+            write(n_cities);
+            for i := 0 to n_cities do 
+                setLength(graph[i].edges, n_links[graph[i].namec]);
         end
         else writeln('file not found');
     end
     else writeln('submit a file with routes');
 end;
 
+var i, j: integer;
 begin 
     read_graph();
+    for i := 0 to 4 do begin
+        write(graph[i].namec, '   ');
+        for j := 0 to length(graph[i].edges) - 1 do 
+            write(graph[i].edges[j, 3], ' ');
+        writeln();
+    end;
 end.

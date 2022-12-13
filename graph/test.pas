@@ -1,5 +1,9 @@
 program shit;
 
+{$mode objfpc}
+
+uses sysutils;
+
 type mas = array of char;
 type arr = array of mas;
 
@@ -39,11 +43,34 @@ begin
 end;
 
 
-var i: integer; q, a: mas; ar: array[1..4] of integer := (1, 2, 3, 4);
+
+function get_num_in_ab(a, b: integer): integer;
+var c: char;
 begin
-    //write(length(ar));
-    //ar := (1; 2; 3; 4);
-    write(ar[2]);
+    write('>'); read(c); readln();
+    while (a > StrToInt(c)) or (b < strtoint(c)) do begin
+        writeln('wrong input');
+        write('>'); read(c); readln();
+    end;
+    get_num_in_ab := StrToInt(c);
+end;
+
+var i, k: integer; q, a: mas; 
+begin
+
+    i := 0; 
+    while (i < 5) and (k <> -1) do begin
+    
+        try
+            read(k);
+        except
+            on EInOutError do 
+                writeln('wrong input');
+            else 
+                k := 100;
+        end;
+        write(k);
+    end;
 end.
 {
 
