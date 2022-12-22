@@ -178,7 +178,7 @@ begin
                             graph[n_cities].edges[n_links[pos_d_arr(city_from, cities)], 4] := nums[2];
                             
                             n_links[pos_d_arr(city_from, cities)] := n_links[pos_d_arr(city_from, cities)] + 1;
-{
+
                             write('->');
                             for i := 0 to n_str do
                                 write(graph[i].namec:1, '  ');
@@ -187,7 +187,7 @@ begin
                                 write(n_links[i], '  ');
                             writeln();
 
-}
+
                             readln(routes); city_from := ''; city_to := ''; name_len := 0; 
                             transport := ''; p_been := false; nums[1] := 0; nums[2] := 0;
                             num_str := num_str + 1; state := ST_EXP; st_mark := '"'; stage := 1;
@@ -283,13 +283,6 @@ begin
         writeln('what do you want to do?(enter a number)', #10#13, '0. start', #10#13, '1. close');
         state := get_num_in_ab('0', '1');
         if (state = '0') then begin
-            writeln('enter the operating mode(enter a number)');
-            writeln('1. Among the shortest paths in time between two cities, find the path of the minimum cost.');
-            writeln('2. Among the paths between two cities, find the path of minimum cost.');
-            writeln('3. Find the path between 2 cities minimum by the number of cities visited.');
-            writeln('4. Find a set of cities reachable from the city of departure for no more than limit_cost money.');
-            writeln('5. Find a set of cities reachable from the senders city in no more than limit_time of time.');
-            oper_mode := get_num_in_ab('1', '5');
             read_graph();
             for i := 1 to length(types_transport) - 1 do begin
                 write(i, '. ');
@@ -328,7 +321,7 @@ begin
                     try
                         write('>'); read(numt); readln();
                         if (numt <= length(types_transport)) and (numt > 0) and (in_darr(numt, desired_trancport) = -1) then begin
-                            desired_trancport[i] := numt;//повторяющ симв
+                            desired_trancport[i] := numt;
                             i := i + 1;
                         end
                         else if (numt <> -1) and (in_darr(numt, desired_trancport) = -1) then
@@ -341,21 +334,32 @@ begin
                 setLength(desired_trancport, i);
             end;
 
-            for i := 0 to length(desired_trancport) - 1 do 
-                write(desired_trancport[i], ' ');
-            //принтуем доступные виды транспорта , просим ввести , обрабатываем 
-            { case oper_mode of
+            writeln('enter the operating mode(enter a number)');
+            writeln('1. Among the shortest paths in time between two cities, find the path of the minimum cost.');
+            writeln('2. Among the paths between two cities, find the path of minimum cost.');
+            writeln('3. Find the path between 2 cities minimum by the number of cities visited.');
+            writeln('4. Find a set of cities reachable from the city of departure for no more than limit_cost money.');
+            writeln('5. Find a set of cities reachable from the senders city in no more than limit_time of time.');
+            oper_mode := get_num_in_ab('1', '5');
+            
+            {case oper_mode of
                 '1':
                     //таблица смежности по времени + счет стоимости
+                    запрос двух городов
+
                 '2':
                     //таблица смежности по стоимости
+                    запрос двух городов
                 '3':
                     //присвоить каждой веришине стоимость 1 + классический алгоритм
+                    запрос двух городов
                 '4':
                     //какой-нибудь поиск в ширину?? idk
+                    город + лим кост
                 '5':
                     //анлалогично 4
-            end;dfdhasdjf}
+                    город + лим кост
+            end;}
             
         end;
     end;

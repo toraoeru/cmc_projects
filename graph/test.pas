@@ -1,87 +1,55 @@
 program shit;
 
-{$mode objfpc}
+const NUM = 5;
 
-uses sysutils;
-
-type mas = array of char;
-type arr = array of mas;
-
-function min_of_int(n1, n2: integer): integer;
+var res, sign, i, n, n_even, l_str, summ: integer; c: char; flag: boolean;
 begin
-    if n1 > n2 then min_of_int := n2
-    else min_of_int := n1;
-end;
-
-
-function in_arr(el: mas; ar: arr): boolean;
-var i, j, flag: integer;
-begin
-    in_arr := false;
-    for i := 0 to length(ar) - 1 do 
-    begin
-        flag := 0;
-        if el = ar[i] then flag := 1;
-        if flag = 1 then in_arr := true;
+    {read(c);
+    res := 0;
+    sign := 1;
+    if c = '-' then sign := -1
+    else res := ord(c) - ord('0');
+    i := 0;
+    while not eoln() do begin
+        read(c); 
+        res := res + round(exp(ln(10) * i)) * (ord(c) - ord('0'));
+        i := i + 1;
     end;
-end;
-
-function pos_d_arr(el: array of char; ar: arr): integer;
-var i, j, res: integer;
-begin
-    pos_d_arr := -1;
-    for i := 0 to length(ar) - 1 do 
-    begin
-        res := -1;
-        if min_of_int(length(el), length(ar[i])) <> 0 then 
-            res := i;
-            for j := 0 to min_of_int(length(el), length(ar[i])) - 1 do begin
-                if el[j] <> ar[i, j] then res := -1
-            end;
-        if res <> -1 then pos_d_arr := res;
+    write(res);
+    if sign = -1 then write('-');
+    }
+    {read(n);
+    res := 0;
+    sign := 1;
+    if n < 0 then sign := -1;
+    while n <> 0 do begin//1234 -> 1 + 20
+        res := res * 10 + n mod 10;
+        n := n div 10;
     end;
-end;
-
-
-
-function get_num_in_ab(a, b: integer): integer;
-var c: char;
-begin
-    write('>'); read(c); readln();
-    while (a > StrToInt(c)) or (b < strtoint(c)) do begin
-        writeln('wrong input');
-        write('>'); read(c); readln();
-    end;
-    get_num_in_ab := StrToInt(c);
-end;
-
-var i, k: integer; q, a: mas; 
-begin
-
-    i := 0; 
-    while (i < 5) and (k <> -1) do begin
-    
-        try
-            read(k);
-        except
-            on EInOutError do 
-                writeln('wrong input');
-            else 
-                k := 100;
+    write(res);
+    if sign = -1 then write('-');}
+    {n_even := 0; l_str := 0;
+    repeat
+        if not eoln() then begin
+            read(c);
+            if c <> '.' then l_str := l_str + 1
+            else if not odd(l_str) then  n_even := n_even + 1;
+        end
+        else begin
+            if not odd(l_str) then n_even := n_even + 1;
+            l_str := 0; readln();
         end;
-        write(k);
+    until c = '.';
+    writeln(n_even);}
+    flag := false;
+    for i := 1 to NUM do begin
+        read(n);
+        if n = 0 then begin
+            summ := 0; flag := true;
+        end
+        else if flag and odd(n) then begin
+            summ := summ + n;
+        end;
     end;
+    write(summ);
 end.
-{
-
-type link = ^edge;
-
-edge = record 
-    namec: integer;
-    city_to: link;
-    tr_name: integer;
-    tc: real; mc: real; 
-end;
-
-var 
-    graph: array of edge; cities, types_transport: array of array of char;}
