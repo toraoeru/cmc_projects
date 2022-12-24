@@ -19,3 +19,7 @@
 # there is no bus return flight
 #
 "Bologoe" "Saint Petersburg" "bus" 180 1000
+#1.edge 3 + mincost&&&&
+#2.mincost
+#3.vertex cost = 1
+#45. weigth

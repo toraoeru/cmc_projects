@@ -3,6 +3,8 @@ program shitcode;
 {$mode objfpc}
 Uses 
     sysutils;
+    
+const INF = maxint - 1;
 
 type
     STATES = (ST_EXP, CL_QUOTES_EXP, NUM_EXP);
@@ -10,7 +12,6 @@ type
 type arr = array of array of char;
 
 type vertex = record 
-    namec: integer;
     edges: array of array[1..4] of integer;
 end;
 //to, trans, tc, mc
@@ -18,7 +19,7 @@ end;
 type burn_in_hell = array of integer;
 
 var 
-    graph: array of vertex; cities, types_transport: array of array of char; n_links: array of integer;
+    graph: array of vertex; cities, types_transport: array of array of char; n_links: array of integer; NO_PARENT: integer;
 
 function min_of_int(n1, n2: integer): integer;
 begin
@@ -64,7 +65,7 @@ end;
 
 procedure read_graph();
 var 
-    routes: text; num_str, i, stage, name_len, n_cities, n_tr, n_str: integer; 
+    routes: text; num_str, i, j, stage, name_len, n_cities, n_tr, n_str, pos: integer; 
     flag, p_been: boolean; nums: array[1..2] of integer; c: char; state: STATES;
     city_from, city_to, transport: array of char; st_mark, error_: string; city: vertex;
 begin
@@ -154,6 +155,21 @@ begin
                     begin
                         read(routes, c);
                         if (stage = 5) and (nums[2] <> 0) and (eoln(routes) or (c = '#') or (c = ' ')) then begin
+                            if (c >= '0') and (c <= '9') then 
+                            begin
+                                if nums[stage - 3] * 10 + StrToInt(c) < maxInt then begin
+                                    if not p_been then nums[stage - 3] := nums[stage - 3] * 10 + StrToInt(c)
+                                    {else begin 
+                                        i := i + 1;
+                                        nums[stage - 3] := nums[stage - 3] + StrToInt(c) / exp(ln(10) * i);
+                                    end;}
+                                end
+                                else begin 
+                                    error_ := 'COST IS TOO LARGE IN ' + IntToStr(num_str);
+                                    flag := false;
+                                end;
+                            end;
+
                             if pos_d_arr(transport, types_transport) = -1 then begin
                                 n_tr := n_tr + 1;  types_transport[n_tr] := transport;
                                 setLength(types_transport[n_tr], length(transport));
@@ -162,31 +178,21 @@ begin
                             if pos_d_arr(city_to, cities) = -1 then begin
                                 n_cities := n_cities + 1; cities[n_cities] := city_to;
                                 setLength(cities[n_cities], length(city_to));
-                                city.namec := pos_d_arr(city_from, cities);
-                                graph[n_cities].namec := pos_d_arr(city_from, cities);
                             end;
 
                             if pos_d_arr(city_from, cities) = -1 then begin
                                 n_cities := n_cities + 1; cities[n_cities] := city_from;
                                 setLength(cities[n_cities], length(city_from));
-                                graph[n_cities].namec := pos_d_arr(city_from, cities);
                             end;
-                            
-                            graph[n_cities].edges[n_links[pos_d_arr(city_from, cities)], 1] := pos_d_arr(city_to, cities);
-                            graph[n_cities].edges[n_links[pos_d_arr(city_from, cities)], 2] := pos_d_arr(transport, types_transport);
-                            graph[n_cities].edges[n_links[pos_d_arr(city_from, cities)], 3] := nums[1];
-                            graph[n_cities].edges[n_links[pos_d_arr(city_from, cities)], 4] := nums[2];
-                            
-                            n_links[pos_d_arr(city_from, cities)] := n_links[pos_d_arr(city_from, cities)] + 1;
+                            pos := pos_d_arr(city_from, cities);
 
-                            write('->');
-                            for i := 0 to n_str do
-                                write(graph[i].namec:1, '  ');
-                            writeln();
-                            for i := 0 to length(n_links) - 1 do 
-                                write(n_links[i], '  ');
-                            writeln();
-
+                            graph[pos].edges[n_links[pos], 1] := pos_d_arr(city_to, cities);
+                            graph[pos].edges[n_links[pos], 2] := pos_d_arr(transport, types_transport);
+                            graph[pos].edges[n_links[pos], 3] := nums[1];
+                            
+                            graph[pos].edges[n_links[pos], 4] := nums[2];
+                            //write(pos, '   ', nums[2], '  ', n_links[pos]);
+                            n_links[pos] := n_links[pos] + 1;
 
                             readln(routes); city_from := ''; city_to := ''; name_len := 0; 
                             transport := ''; p_been := false; nums[1] := 0; nums[2] := 0;
@@ -230,7 +236,8 @@ begin
             setLength(cities, n_cities + 1); setLength(types_transport, n_tr + 1); setLength(graph, n_cities + 1);
             //write(n_cities);
             for i := 0 to n_cities do 
-                setLength(graph[i].edges, n_links[graph[i].namec]);
+                setLength(graph[i].edges, n_links[i]);
+            setLength(n_links, n_cities);
         end
         else writeln('file not found');
     end
@@ -247,7 +254,7 @@ begin
     end;
 end;
 
-function get_num_in_ab(a, b: char): char;
+function get_chr_in_ab(a, b: char): char;
 var c: char;
 begin
     write('>'); read(c); readln();
@@ -256,7 +263,25 @@ begin
         write('>'); read(c); readln();
     end;
     {writeln('finnaly!!! you entered correctly ', c);}
-    get_num_in_ab := c;
+    get_chr_in_ab := c;
+end;
+
+function get_num_in_ab(a, b: integer): integer;
+var i, res: integer;
+begin
+    i := 1;
+    while i = 1 do begin
+        try
+            write('>'); read(res); readln();
+            if (res >= b) or (res < a) then  
+                writeln('there is no such city')
+            else i := 0;                                    
+        except
+            on EInOutError do 
+                writeln('wrong input');   
+        end;
+    end;
+    get_num_in_ab := res;
 end;
 
 procedure del_el_val(enemy: integer; var arr: burn_in_hell);
@@ -273,15 +298,78 @@ begin
     setLength(arr, length(arr) - num_enemy);
 end;
 
-var 
-    state, oper_mode, f: char; i, j, numt: integer; desired_trancport: array of integer;
+
+procedure print_arr(ar: array of char);
+var i: integer;
 begin
-    state := '0';
+    for i := 0 to length(ar) - 1 do write(ar[i]);
+end;
+
+procedure print_path(current_vertex: integer; parents: array of integer);
+begin
+	if current_vertex <> NO_PARENT then begin
+        print_path(parents[current_vertex], parents);
+        print_arr(cities[current_vertex]);
+        write(' ');
+    end;
+end;
+
+procedure print_solution(start_vertex: integer; dist, parents: array of integer);
+var i: integer;
+begin
+	for i := 1 to length(dist) do begin
+		if i <> start_vertex then begin
+			writeln(); print_arr(cities[start_vertex]);
+			write(' -> '); print_arr(cities[i]);
+            write(' ', dist[i], ' ');
+			print_path(i, parents);
+		end;
+	end;
+end;
+
+procedure dijkstra(graph: array of vertex; start_vertex: integer);
+var n_links, i, j, near_v, sh_d, edge_d: integer; dist, parents: array of integer; added: array of boolean;
+begin
+	n_links := length(graph[1].edges);
+	setLength(dist, n_links);
+	setLength(added, n_links);
+	for i := 0 to n_links - 1 do begin
+		dist[i] := INF;
+		added[i] := false;
+	end;
+	dist[start_vertex] := 0;
+	setLength(parents, n_links);
+	parents[start_vertex] := NO_PARENT;
+    
+	for i := 1 to n_links - 1 do begin
+		near_v := -1; sh_d := INF;
+		for j := 0 to n_links -1 do begin
+			if (not added[j]) and (dist[j] < sh_d) then begin
+				near_v := j; sh_d := dist[j];
+			end;
+		end;
+		added[near_v] := true;
+		for j := 0 to n_links - 1 do begin
+			edge_d := graph[near_v+ 1].edges[j, 4];
+			if (edge_d > 0) and ((sh_d + edge_d) < dist[j]) then begin
+				parents[j] := near_v;
+				dist[j]	:= sh_d + edge_d;
+			end;
+		end;
+	end;
+	print_solution(start_vertex, dist, parents);
+end;
+
+var 
+    used: array of boolean; desired_trancport, dist: array of integer;
+    state, oper_mode, f: char; i, j, numt, cf, ct, lt, lc, min_dist, min_vertex: integer; 
+begin
+    state := '0'; NO_PARENT := -1;
     
     while (state = '0') do 
     begin
         writeln('what do you want to do?(enter a number)', #10#13, '0. start', #10#13, '1. close');
-        state := get_num_in_ab('0', '1');
+        state := get_chr_in_ab('0', '1');
         if (state = '0') then begin
             read_graph();
             for i := 1 to length(types_transport) - 1 do begin
@@ -292,7 +380,7 @@ begin
             end;
             setLength(desired_trancport, length(types_transport));
             writeln('do you want to exclude any specific modes of transport(0) or exclude all except those indicated(1)?');
-            f :=  get_num_in_ab('0', '1');
+            f :=  get_chr_in_ab('0', '1');
             if f = '0' then begin
                 writeln('enter the type of transport you want to exclude(-1 to end)');
                 for i := 0 to length(desired_trancport) - 1  do
@@ -340,14 +428,43 @@ begin
             writeln('3. Find the path between 2 cities minimum by the number of cities visited.');
             writeln('4. Find a set of cities reachable from the city of departure for no more than limit_cost money.');
             writeln('5. Find a set of cities reachable from the senders city in no more than limit_time of time.');
-            oper_mode := get_num_in_ab('1', '5');
+            oper_mode := get_chr_in_ab('1', '5');
             
-            {case oper_mode of
-                '1':
-                    //таблица смежности по времени + счет стоимости
-                    запрос двух городов
+            for i := 1 to length(cities) - 1  do begin
+                write(i, '. ');
+                for j := 0 to length(cities[i]) -1 do
+                    write(cities[i, j]);
+                writeln();
+            end;
+            case oper_mode of
+                '1', '2', '3':
+                    begin
+                        writeln('enter city of departure');
+                        cf := get_num_in_ab(0, length(cities)) - 1;
+                        writeln('enter destination city');
+                        ct := get_num_in_ab(0, length(cities)) - 1;
+                    end;
+                '4', '5':
+                    begin
+                        writeln('enter city of departure');
+                        cf := get_num_in_ab(0, length(cities)) - 1;
+                        if oper_mode = '4' then begin 
+                            writeln('enter limit cost');
+                            lc := get_num_in_ab(-maxint, maxint);
+                        end
+                        else begin 
+                            writeln('enter limit time');
+                            lt := get_num_in_ab(-maxint, maxint);
+                        end;
+                    end;
+            end;
 
-                '2':
+            case oper_mode of
+                '1':
+                    begin
+                        dijkstra(graph, cf);
+                    end;
+                {'2':
                     //таблица смежности по стоимости
                     запрос двух городов
                 '3':
@@ -358,10 +475,9 @@ begin
                     город + лим кост
                 '5':
                     //анлалогично 4
-                    город + лим кост
-            end;}
-            
+                    город + лим кост}
+            end;
         end;
     end;
 end.          //выход за пределы, не число, пустые строки, 23
-                
+                //BREAKLINE
