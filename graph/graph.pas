@@ -18,6 +18,8 @@ end;
 
 type burn_in_hell = array of integer;
 
+type shit = array of array[1..2] of integer;
+
 var 
     graph: array of vertex; cities, types_transport: array of array of char; n_links: array of integer; NO_PARENT: integer;
 
@@ -176,12 +178,12 @@ begin
                             end;
 
                             if pos_d_arr(city_to, cities) = -1 then begin
-                                n_cities := n_cities + 1; cities[n_cities] := city_to;
+                                cities[n_cities] := city_to; n_cities := n_cities + 1;
                                 setLength(cities[n_cities], length(city_to));
                             end;
 
                             if pos_d_arr(city_from, cities) = -1 then begin
-                                n_cities := n_cities + 1; cities[n_cities] := city_from;
+                                cities[n_cities] := city_from; n_cities := n_cities + 1; 
                                 setLength(cities[n_cities], length(city_from));
                             end;
                             pos := pos_d_arr(city_from, cities);
@@ -189,9 +191,7 @@ begin
                             graph[pos].edges[n_links[pos], 1] := pos_d_arr(city_to, cities);
                             graph[pos].edges[n_links[pos], 2] := pos_d_arr(transport, types_transport);
                             graph[pos].edges[n_links[pos], 3] := nums[1];
-                            
                             graph[pos].edges[n_links[pos], 4] := nums[2];
-                            //write(pos, '   ', nums[2], '  ', n_links[pos]);
                             n_links[pos] := n_links[pos] + 1;
 
                             readln(routes); city_from := ''; city_to := ''; name_len := 0; 
@@ -233,7 +233,7 @@ begin
                 write(error_);
                 if stage > 3 then st_mark := '0123456789';
             end;
-            setLength(cities, n_cities + 1); setLength(types_transport, n_tr + 1); setLength(graph, n_cities + 1);
+            setLength(cities, n_cities ); setLength(types_transport, n_tr + 1); setLength(graph, n_cities + 1);
             //write(n_cities);
             for i := 0 to n_cities do 
                 setLength(graph[i].edges, n_links[i]);
@@ -273,7 +273,7 @@ begin
     while i = 1 do begin
         try
             write('>'); read(res); readln();
-            if (res >= b) or (res < a) then  
+            if (res > b) or (res < a) then  
                 writeln('there is no such city')
             else i := 0;                                    
         except
@@ -305,60 +305,103 @@ begin
     for i := 0 to length(ar) - 1 do write(ar[i]);
 end;
 
-procedure print_path(current_vertex: integer; parents: array of integer);
+
+procedure print_path(current_vertex: integer; parents: shit);
 begin
 	if current_vertex <> NO_PARENT then begin
-        print_path(parents[current_vertex], parents);
-        print_arr(cities[current_vertex]);
-        write(' ');
+        print_path(parents[current_vertex, 1], parents); write(' -> ');
+        print_arr(cities[current_vertex]); write(' (');
+        print_arr(types_transport[parents[current_vertex, 2]]); 
+        write(') ');
     end;
 end;
 
-procedure print_solution(start_vertex: integer; dist, parents: array of integer);
+procedure print_solution(start_vertex: integer; dist, costs: array of integer; parents: shit);
 var i: integer;
 begin
-	for i := 1 to length(dist) do begin
+	for i := 0 to length(dist) - 1 do begin
 		if i <> start_vertex then begin
-			writeln(); print_arr(cities[start_vertex]);
-			write(' -> '); print_arr(cities[i]);
+			print_arr(cities[start_vertex]);
+            write(' -> '); print_arr(cities[i]);
             write(' ', dist[i], ' ');
-			print_path(i, parents);
+			print_path(i, parents); 
+            write(' - ', costs[i]); writeln(); 
 		end;
 	end;
 end;
 
-procedure dijkstra(graph: array of vertex; start_vertex: integer);
-var n_links, i, j, near_v, sh_d, edge_d: integer; dist, parents: array of integer; added: array of boolean;
+procedure dijkstra(graph: array of vertex; start_vertex: integer; dt: array of integer);
+var n_links, i, j, near_v, sh_d, edge_d: integer; dist, costs: array of integer; parents: shit; added: array of boolean;
 begin
-	n_links := length(graph[1].edges);
+	n_links := length(graph[0].edges);
 	setLength(dist, n_links);
 	setLength(added, n_links);
+    setLength(costs, n_links);
 	for i := 0 to n_links - 1 do begin
 		dist[i] := INF;
+        costs[i] := 0;
 		added[i] := false;
 	end;
+    
 	dist[start_vertex] := 0;
 	setLength(parents, n_links);
-	parents[start_vertex] := NO_PARENT;
-    
+	parents[start_vertex, 1] := NO_PARENT;
 	for i := 1 to n_links - 1 do begin
+        //write(n_links, '   ', length(graph), '  ', length(graph[i].edges), '  ');
 		near_v := -1; sh_d := INF;
-		for j := 0 to n_links -1 do begin
+		for j := 0 to n_links - 1 do begin
 			if (not added[j]) and (dist[j] < sh_d) then begin
 				near_v := j; sh_d := dist[j];
 			end;
 		end;
 		added[near_v] := true;
 		for j := 0 to n_links - 1 do begin
-			edge_d := graph[near_v+ 1].edges[j, 4];
-			if (edge_d > 0) and ((sh_d + edge_d) < dist[j]) then begin
-				parents[j] := near_v;
-				dist[j]	:= sh_d + edge_d;
-			end;
+            //write('ffff');
+            edge_d := graph[near_v].edges[j, 4];
+            //if (in_darr(graph[near_v].edges[j, 2], dt) <> -1) then begin
+                
+            //write(in_darr(graph[near_v].edges[j, 2], dt) <> -1, '  ', '->');
+            if (edge_d > 0) and ((sh_d + edge_d) < dist[j]) then begin
+                parents[j, 1] := near_v;
+                parents[j, 2] := graph[near_v].edges[j, 2];
+                costs[j] := costs[j] + graph[near_v].edges[j, 3];
+                dist[j]	:= sh_d + edge_d;
+            end
+            else if (edge_d > 0) and ((sh_d + edge_d) = dist[j]) and (graph[parents[j, 1]].edges[j, 3] > graph[near_v].edges[j, 3]) then begin
+                parents[j, 1] := near_v;
+                parents[j, 2] := graph[near_v].edges[j, 2];
+                costs[j] := costs[j] + graph[near_v].edges[j, 3];
+            end;
+
+            //end;
 		end;
+        //writeln();
 	end;
-	print_solution(start_vertex, dist, parents);
-end;
+	print_solution(start_vertex, dist, costs, parents);
+end; 
+
+procedure bfs(graph: array of vertex; start: integer);
+var
+   Q, D: array[1..1001] of longint;
+   a: array[1..1000, 1..1000] of longint;
+   i, j, n,  finish, Qstart, Qend, u, v: longint;
+ begin
+   for i := 1 to n do D[i] := -1;
+   D[start] := 0; Q[1] := start;
+   Qstart := 1; Qend := 2;
+   while Qstart < Qend do 
+   begin
+        u := Q[Qstart];
+        Qstart := Qstart + 1;
+        for v := 1 to n do 
+            if (a[u, v] = 1) and (d[v] = -1) then begin
+                d[v] := d[u] + 1;
+                Q[Qend] := v;
+                inc(Qend);
+            end;
+        end;
+    writeln(d[finish]);
+ end;
 
 var 
     used: array of boolean; desired_trancport, dist: array of integer;
@@ -405,7 +448,7 @@ begin
             else begin
                 writeln('enter the types of transport that you want to use(-1 to end)');
                 i := 0;
-                while (i < length(desired_trancport) - 2) and (numt <> -1) do begin
+                while (i < length(desired_trancport) - 1) and (numt <> -1) do begin
                     try
                         write('>'); read(numt); readln();
                         if (numt <= length(types_transport)) and (numt > 0) and (in_darr(numt, desired_trancport) = -1) then begin
@@ -430,10 +473,9 @@ begin
             writeln('5. Find a set of cities reachable from the senders city in no more than limit_time of time.');
             oper_mode := get_chr_in_ab('1', '5');
             
-            for i := 1 to length(cities) - 1  do begin
-                write(i, '. ');
-                for j := 0 to length(cities[i]) -1 do
-                    write(cities[i, j]);
+            for i := 0 to length(cities) - 1  do begin
+                write(i + 1, '. ');
+                print_arr(cities[i]);
                 writeln();
             end;
             case oper_mode of
@@ -462,7 +504,7 @@ begin
             case oper_mode of
                 '1':
                     begin
-                        dijkstra(graph, cf);
+                        dijkstra(graph, cf, desired_trancport);
                     end;
                 {'2':
                     //таблица смежности по стоимости
