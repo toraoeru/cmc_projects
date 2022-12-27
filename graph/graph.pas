@@ -330,6 +330,7 @@ begin
 	end;
 end;
 
+
 procedure dijkstra(graph: array of vertex; start_vertex: integer; dt: array of integer);
 var n_links, i, j, near_v, sh_d, edge_d: integer; dist, costs: array of integer; parents: shit; added: array of boolean;
 begin
