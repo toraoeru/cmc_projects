@@ -306,165 +306,72 @@ begin
     for i := 0 to length(ar) - 1 do write(ar[i]);
 end;
 
-procedure print_path(current_vertex: integer; parents: shit);
-begin
-	if current_vertex <> NO_PARENT then begin
-        print_path(parents[current_vertex, 1], parents); write(' -> ');
-        print_arr(cities[current_vertex]); write(' (');
-        print_arr(types_transport[parents[current_vertex, 2]]); 
-        write(') ');
-    end;
-end;
-
-procedure print_solution(start_vertex: integer; dist, costs: array of integer; parents: shit);
-var i: integer;
-begin
-	for i := 0 to length(dist) - 1 do begin
-		if i <> start_vertex then begin
-			print_arr(cities[start_vertex]);
-            write(' -> '); print_arr(cities[i]);
-            write(' ', dist[i], ' ');
-			print_path(i, parents); 
-            write(' - ', costs[i]); writeln(); 
-		end;
-	end;
-end;
-
-procedure dijkstra(graph: array of vertex; start_vertex: integer; dt: array of integer);
-var 
-    n_links, i, j, near_v, sh_d, edge_d: integer; dist, costs: array of integer; parents: shit; added: array of boolean;
-begin
-	n_links := length(graph[0].edges);
-	setLength(dist, n_links);
-	setLength(added, n_links);
-    setLength(costs, n_links);
-	for i := 0 to n_links - 1 do begin
-		dist[i] := INF;
-        costs[i] := 0;
-		added[i] := false;
-	end;
-    
-	dist[start_vertex] := 0;
-	setLength(parents, n_links);
-	parents[start_vertex, 1] := NO_PARENT;
-	for i := 1 to n_links - 1 do begin
-        //write(n_links, '   ', length(graph), '  ', length(graph[i].edges), '  ');
-		near_v := -1; sh_d := INF;
-		for j := 0 to n_links - 1 do begin
-			if (not added[j]) and (dist[j] < sh_d) {and (in_darr(graph[near_v].edges[j, 2], dt) <> -1)} then begin
-				near_v := j; sh_d := dist[j];
-			end;
-		end;
-		added[near_v] := true;
-		for j := 0 to n_links - 1 do begin
-            //write('ffff');
-            
-           // if (in_darr(graph[near_v].edges[j, 2], dt) <> -1) then begin
-                edge_d := graph[near_v].edges[j, 4];
-                //write(in_darr(graph[near_v].edges[j, 2], dt) <> -1, '  ', '->');
-                if (edge_d > 0) and ((sh_d + edge_d) < dist[j]) then begin
-                    parents[j, 1] := near_v;
-                    parents[j, 2] := graph[near_v].edges[j, 2];
-                    costs[j] := costs[j] + graph[near_v].edges[j, 3];
-                    dist[j]	:= sh_d + edge_d;
-                end
-                else if (edge_d > 0) and ((sh_d + edge_d) = dist[j]) and (graph[parents[j, 1]].edges[j, 3] > graph[near_v].edges[j, 3]) then begin
-                    parents[j, 1] := near_v;
-                    parents[j, 2] := graph[near_v].edges[j, 2];
-                    costs[j] := costs[j] + graph[near_v].edges[j, 3];
-                end;
-
-            //end;
-		end;
-        //writeln();
-	end;
-	print_solution(start_vertex, dist, costs, parents);
-end;
-
-////////////////////
-
- 
-procedure Dijks(GM: array of vertex; st: integer; dt: burn_in_hell);
+procedure fuckingshit(GM: array of vertex; st: integer; dt: burn_in_hell);
 var
     count, index, i, u, min, n: integer;
     distance: array of integer; from: array of array[1..2] of integer; costs: array of integer;
     visited: array of boolean; 
 
-    procedure print_way(k: integer);
+ procedure printway(k: integer);//вывод кратчайшего пути
+  begin
+    if (from[k, 1] <> st) and (k <> st) then 
     begin
-        if (from[k, 1] <> st) and (k <> st) then 
-        begin  
-            print_way(from[k, 1]);
-            write(' > ');
-        end;
-        print_arr(cities[k]);
-        write(' ('); print_arr(types_transport[from[k, 2]]); 
-        write(') ');
+      printway(from[k,1]);
+      write(' > ');
     end;
-
-begin
+    write(k);
+  end;
+  begin
     n := length(graph);
     setLength(distance, N);
-    setLength(from, N);
-    setLength(visited, N);
-    setLength(costs, N);
-
-    for i := 0 to n - 1 do
+        setLength(from, N);
+        setLength(visited, N);
+        setLength(costs, N);
+    for i := 0 to n -1 do
     begin
-        distance[i] := INF; 
-        costs[i] := 0;
-        visited[i] := false;
+      distance[i] := inf; 
+      visited[i] := false;
     end;
     distance[st] := 0;
-    for count := 1 to n - 1 do
+    for count := 0 to n - 1 do
     begin
-        min := INF;
-        for i := 0 to n - 1  do
+        
+      min := inf;
+      for i := 0 to n-1 do
         if (not visited[i]) and (distance[i] <= min) then
         begin
-            min := distance[i]; 
-            index := i;
+          min := distance[i]; 
+          index := i;
         end;
-        u := index;
-        visited[u] := true;
-        for i := 0 to n - 1 do
-            write(i);
-            if (not visited[i]) and (GM[u].edges[i, 4] <> 0) and (distance[u] <> INF) and (in_darr(graph[u].edges[i, 2], dt) <> -1) then
-            begin
-                if (distance[u] + GM[u].edges[i,4] < distance[i]) then
-                begin
-                    distance[i] := distance[u] + GM[u].edges[i,4];
-                    from[i, 1] := u;
-                    from[i, 2] := GM[u].edges[i, 2]; 
-                    costs[i] := costs[i] + GM[u].edges[i, 3];
-                end
-                else if (distance[u] + GM[u].edges[i,4] = distance[i]) and (GM[u].edges[i, 3] > GM[from[i, 1]].edges[i, 3]) then
-                begin
-                    from[i, 1] := u;
-                    from[i, 2] := GM[u].edges[i, 2]; 
-                    costs[i] := costs[i] + GM[u].edges[i, 3];
-                end;
-            end;
-        end;
-        writeln();
-        for i := 0 to n - 2 do
+        write(' > ');
+      u := index;
+      visited[u] := true;
+      for i := 0 to n-1 do
+      writeln(visited[i], '   ', GM[u].edges[i,4], '  ', distance[u], '   ',  distance[i]);
+      write((not visited[i]) and (GM[u].edges[i,4] <> 0) and (distance[u] <> inf) and (distance[u] +GM[u].edges[i,4] < distance[i]));
+        if (not visited[i]) and (GM[u].edges[i,4] <> 0) and (distance[u] <> inf) and (distance[u] +GM[u].edges[i,4] < distance[i]) then
         begin
-            if i <> st then begin
-                print_arr(cities[st]);
-                write(' to ');
-                print_arr(cities[i]);
-                if distance[i] = inf then writeln(' - No way')
-                else
-                begin
-                    write(' Time cost: ', distance[i], ' Way: ');
-                    print_arr(cities[st]); write(' > ');
-                    print_way(i); write(' Money cost: ', costs[i]); 
-                    writeln();
-                end;
-            end;
+            writeln('!!!!!!!!!');
+          distance[i] := distance[u] + GM[u].edges[i,4];//вычисляется стоимость маршрута 
+          from[i,1] := u;
         end;
+    end;
+    
+    write('Стоимость пути из начальной вершины до остальных:');
+    writeln;
+    for i := 0 to n -1 do
+    begin
+      write(st, ' > ', i, ' = ');
+      if distance[i] = inf then writeln('маршрут недоступен')
+      else 
+      begin
+        write(distance[i], ' Путь: ', st, ' > ');
+        printway(i);
+        writeln
+      end;
+    end;
   end;
- 
+
  //////////////
 
 var 
@@ -495,45 +402,15 @@ begin
                 writeln('wrong input');   
         end;
     end;
-
-    {for i := 0 to length(graph) -1 do begin
+    setLength(desired_transport, i);   
+    for i := 0 to length(graph) -1 do begin
         for j:= 0 to length(graph[i].edges) -1 do 
-            write(in_darr(graph[i].edges[j, 2], desired_transport) <> -1, '   ');
+            print_arr(cities[graph[i].edges[j, 1]]);
         writeln();
-    end;}
-    setLength(desired_transport, i);    
-    writeln('enter city of departure');
+    end;
+     
+    writeln('enter city of departure',length(graph));
     cf := get_num_in_ab(1, length(cities)) - 1;
-    Dijks(graph, cf, desired_transport);
-    //dijkstra(graph, cf, desired_transport);
-    {setLength(dist, length(graph));
-    setLength(used, length(graph));
-    for i := 0 to length(dist) - 1 do begin
-        dist[i] := INF;
-        used[i] := false;
-    end;
-    dist[cf] := 0; min_dist := 0;
-    min_vertex := cf;
-    while min_dist < INF do begin
-        i := min_vertex;
-        used[i] := true;
-        write('#');
-        for j := 0 to length(graph) - 1 do begin
-            write('#');
-            if (dist[i] + graph[i].edges[j, 4] < dist[j]) then
-                dist[j] := dist[i] + graph[i].edges[j, 4];
-        end;
-        min_dist := INF;
-        for j := 0 to length(graph) - 1 do begin
-            write('*');
-            if (not used[j]) and (dist[j] < min_dist) then begin
-                min_dist := dist[j];
-                min_vertex := j;
-            end;
-        end;
-    end;
-    write('@');
-    for i:= 0 to length(graph) - 1 do
-        write(dist[i], '   ');
-    }
+    fuckingshit(graph, cf, desired_transport);
+
 end.
