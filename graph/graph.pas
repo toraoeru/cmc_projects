@@ -21,7 +21,7 @@ type burn_in_hell = array of integer;
 type shit = array of array[1..2] of integer;
 
 var 
-    graph: array of vertex; cities, types_transport: array of array of char; n_links: array of integer; NO_PARENT: integer;
+    graph: array of vertex; cities, types_transport: array of array of char; n_links: array of integer;
 
 function min_of_int(n1, n2: integer): integer;
 begin
@@ -60,12 +60,12 @@ begin
     read(file_, c);
     if eoln(file_) or (c = '#') then 
     begin
-        error_ := 'UNEXPECTED LINE BREAK IN ' + IntToStr(num_str);
+        error_ := '(read)UNEXPECTED LINE BREAK IN ' + IntToStr(num_str);
         flag := false;
     end;
 end;
 
-procedure read_graph();
+function read_graph(): boolean;//////////////////
 var 
     routes: text; num_str, i, j, stage, name_len, n_cities, n_tr, n_str, pos: integer; 
     flag, p_been: boolean; nums: array[1..2] of integer; c: char; state: STATES;
@@ -123,7 +123,7 @@ begin
                                 num_str := num_str + 1;
                             end
                             else begin
-                                error_ := 'UNEXPECTED LINE BREAK ' + IntToStr(num_str);
+                                error_ := '(st_exp)UNEXPECTED LINE BREAK ' + IntToStr(num_str);
                                 flag := false; city_from := ''; city_to := ''; 
                                 transport := ''; p_been := false; stage := 1; 
                             end;
@@ -200,7 +200,7 @@ begin
                             setLength(city_from, 512); setLength(city_to, 512); setLength(transport, 512);
                         end
                         else if eoln(routes) or (c = '#') then begin
-                            error_ := 'UNEXPECTED LINE BREAK ' + IntToStr(num_str);
+                            error_ := '(num_exp)UNEXPECTED LINE BREAK ' + IntToStr(num_str);
                             flag := false;
                         end
                         else begin
@@ -242,6 +242,7 @@ begin
         else writeln('file not found');
     end
     else writeln('submit a file with routes');
+    read_graph := flag;
 end;
 
 function in_darr(el: integer; ar: array of integer): integer;
@@ -354,15 +355,22 @@ begin
         visited[u] := true;
         for i := 0 to n - 1 do
         begin
+            //writeln(i,(not visited[i]), (GM[u].edges[i, 3 + is_mode_4] <> 0) ,(distance[u] <> INF),  (in_darr(graph[u].edges[i, 2], dt) <> -1));
             if (not visited[i]) and (GM[u].edges[i, 3 + is_mode_4] <> 0) and (distance[u] <> INF)
             and (in_darr(graph[u].edges[i, 2], dt) <> -1) then
             begin
+                //write('1111');
                 if (distance[u] + GM[u].edges[i, 3 + is_mode_4] < distance[i]) then
                 begin
+                    //write('!');
                     distance[i] := distance[u] + GM[u].edges[i, 3 + is_mode_4];
+                    //write('!');
                     from[i, 1] := u;
+                    //write('!');
                     from[i, 2] := GM[u].edges[i, 2]; 
+                    //write('!');
                     costs[i] := costs[i] + GM[u].edges[i, 4 - is_mode_4];
+                    //write('!');
                 end
                 else if (distance[u] + GM[u].edges[i, 3 + is_mode_4] = distance[i]) and 
                 (GM[u].edges[i, 4 - is_mode_4] > GM[from[i, 1]].edges[i, 4 - is_mode_4]) then
@@ -375,6 +383,7 @@ begin
         end;
     end;
     flag := false;
+    //write('22222');
     case mode of
         1, 2:
             begin
@@ -385,7 +394,7 @@ begin
                     if distance[end_lim] = inf then writeln(' - No way')
                     else
                     begin
-                        write('Way: ');
+                        write(' Way: ');
                         print_arr(cities[st]); 
                         write(' > ');
                         print_way(end_lim); 
@@ -434,152 +443,188 @@ begin
 end;
 
 
-procedure bfs(graph: array of vertex; start: integer);
+procedure bfs(graph: array of vertex; start, finish: integer);
 var
-   Q, D: array[1..1001] of longint;
-   a: array[1..1000, 1..1000] of longint;
-   i, j, n,  finish, Qstart, Qend, u, v: longint;
+    queue, dist: array of integer; 
+    i, j, n, q_st, q_end, u, v, tmp1, tmp2: integer;
+    is_path_exist: boolean;
+    prev, ans: array of array[1..2] of integer;
  begin
-   for i := 1 to n do D[i] := -1;
-   D[start] := 0; Q[1] := start;
-   Qstart := 1; Qend := 2;
-   while Qstart < Qend do 
-   begin
-        u := Q[Qstart];
-        Qstart := Qstart + 1;
-        for v := 1 to n do 
-            if (a[u, v] = 1) and (d[v] = -1) then begin
-                d[v] := d[u] + 1;
-                Q[Qend] := v;
-                inc(Qend);
+    n := length(graph);
+    setLength(dist, n);
+    setLength(prev, n);
+    setLength(queue, n);
+    setLength(ans, n);
+    for j := 0 to n - 1 do begin
+        dist[j] := -1;
+        prev[j, 1] := -1;
+    end;
+
+    dist[start] := 0;
+    queue[0] := start;
+    q_st := 1;
+    q_end := 2;
+
+    while q_st < q_end do 
+    begin
+        u := queue[q_st];
+        q_st := q_st + 1; 
+        for v := 0 to length(graph[u].edges) - 1 do begin
+            is_path_exist := false;
+            //graph[u].edges[v, 1] среди эджес граф ю найдется в в
+            for j := 0 to length(graph[u].edges) - 1 do begin
+                if graph[u].edges[j, 1] = v then is_path_exist := true;
+            end;
+            if (is_path_exist) and (dist[v] = -1) then begin
+                dist[v] := dist[u] + 1;
+                queue[q_end] := v;
+                prev[v, 1] := u;
+                prev[v, 2] := graph[u].edges[v, 2]; 
+                q_end := q_end + 1;
             end;
         end;
-    writeln(d[finish]);
- end;
+    end;
+    tmp1 := finish;
+    i := 1;
+    while tmp1 <> -1 do 
+    begin
+        ans[i, 1] := tmp1;
+        ans[i, 2] := tmp2;
+        i := i + 1;
+        tmp1 := prev[tmp1, 1];
+        tmp2 := prev[tmp2, 2];
+    end;
+    for j := i - 1 downto 0 do begin
+        if j <> i - 1 then write(' > ');
+        print_arr(cities[ans[j, 1]]); 
+        write(' (');
+        print_arr(types_transport[ans[j, 2]]); 
+        write(') ');
+    end;
+    writeln();
+end;
 
 
 var 
     used: array of boolean; desired_transport, dist: array of integer;
     state, oper_mode, f: char; i, j, numt, cf, ct, lt, lc, min_dist, min_vertex: integer; 
 begin
-    state := '0'; NO_PARENT := -1;
-    
-    while (state = '0') do 
-    begin
-        writeln('what do you want to do?(enter a number)', #10#13, '0. start', #10#13, '1. close');
-        state := get_chr_in_ab('0', '1');
-        if (state = '0') then begin
-            read_graph();
-            for i := 0 to length(types_transport) - 1 do begin
-                write(i + 1, '. ');
-                for j := 0 to length(types_transport[i]) - 1 do
-                    write(types_transport[i, j]);
-                writeln();
-            end;
-            setLength(desired_transport, length(types_transport));
-            writeln('do you want to exclude any specific modes of transport(0) or exclude all except those indicated(1)?');
-            f :=  get_chr_in_ab('0', '1');
-            if f = '0' then begin
-                writeln('enter the type of transport you want to exclude(-1 to end)');
-                for i := 0 to length(desired_transport) - 1  do
-                    desired_transport[i] := i;
-                i := 0;
-                while (i < length(desired_transport) - 1) and (numt <> -2) do begin
-                    try
-                        write('>');
-                        read(numt); 
-                        numt := numt - 1;
-                        readln();
-                        if (numt < length(types_transport)) and (numt >= 0) and (desired_transport[numt] <> -2) then begin
-                            desired_transport[numt ] := -2;
-                            i := i + 1;
-                        end
-                        else if (numt <> -2) and (in_darr(numt, desired_transport) = -1) then
-                            writeln('there is no such city');
-                    except
-                        on EInOutError do
-                            writeln('wrong input');
-                    end;
-                end;
+    state := '0';
 
-                del_el_val(-2, desired_transport);
-                //writeln();//ошибки при повторной работе, ошибки при 
-            end
-            else begin
-                writeln('enter the types of transport that you want to use(-1 to end)');
-                for i := 0 to length(desired_transport) - 1  do
-                    desired_transport[i] := -1;
-                i := 0;
-                while (i < length(desired_transport)) and (numt <> -2) do begin
-                    try
-                        write('>'); 
-                        read(numt); 
-                        numt := numt - 1;
-                        readln();
-                        if (numt < length(types_transport)) and (numt >= 0) and (in_darr(numt, desired_transport) = -1) then begin
-                            desired_transport[i] := numt;
-                            i := i + 1;
-                        end
-                        else if (numt <> -2) and (in_darr(numt, desired_transport) = -1) then
-                            writeln('there is no such city');                      
-                    except
-                        on EInOutError do 
-                            writeln('wrong input');   
-                    end;
+    if read_graph() then begin
+        while (state = '0') do 
+        begin
+            writeln('what do you want to do?(enter a number)', #10#13, '0. start', #10#13, '1. close');
+            state := get_chr_in_ab('0', '1');
+            if (state = '0') then begin
+                for i := 0 to length(types_transport) - 1 do begin
+                    write(i + 1, '. ');
+                    for j := 0 to length(types_transport[i]) - 1 do
+                        write(types_transport[i, j]);
+                    writeln();
                 end;
-                setLength(desired_transport, i);
-            end;
-            {for i := 0 to length(desired_transport) - 1 do
-                print_arr(types_transport[desired_transport[i]]);}
-            
-            writeln('enter the operating mode(enter a number)');
-            writeln('1. Among the shortest paths in time between two cities, find the path of the minimum cost.');
-            writeln('2. Among the paths between two cities, find the path of minimum cost.');
-            writeln('3. Find the path between 2 cities minimum by the number of cities visited.');
-            writeln('4. Find a set of cities reachable from the city of departure for no more than limit_cost money.');
-            writeln('5. Find a set of cities reachable from the senders city in no more than limit_time of time.');
-            oper_mode := get_chr_in_ab('1', '5');
-            
-            for i := 0 to length(cities) - 1  do begin
-                write(i + 1, '. ');
-                print_arr(cities[i]);
-                writeln();
-            end;
-            case oper_mode of
-                '1', '2', '3':
-                    begin
-                        writeln('enter city of departure');
-                        cf := get_num_in_ab(0, length(cities)) - 1;
-                        writeln('enter destination city');
-                        ct := get_num_in_ab(0, length(cities)) - 1;
-                    end;
-                '4', '5':
-                    begin
-                        writeln('enter city of departure');
-                        cf := get_num_in_ab(0, length(cities)) - 1;
-                        if oper_mode = '4' then begin 
-                            writeln('enter limit cost');
-                            lc := get_num_in_ab(-maxint, maxint);
-                        end
-                        else begin 
-                            writeln('enter limit time');
-                            lt := get_num_in_ab(-maxint, maxint);
+                setLength(desired_transport, length(types_transport));
+                writeln('do you want to exclude any specific modes of transport(0) or exclude all except those indicated(1)?');
+                f :=  get_chr_in_ab('0', '1');
+                if f = '0' then begin
+                    writeln('enter the type of transport you want to exclude(-1 to end)');
+                    for i := 0 to length(desired_transport) - 1  do
+                        desired_transport[i] := i;
+                    i := 0;
+                    while (i < length(desired_transport) - 1) and (numt <> -2) do begin
+                        try
+                            write('>');
+                            read(numt); 
+                            numt := numt - 1;
+                            readln();
+                            if (numt < length(types_transport)) and (numt >= 0) and (desired_transport[numt] <> -2) then begin
+                                desired_transport[numt ] := -2;
+                                i := i + 1;
+                            end
+                            else if (numt <> -2) and (in_darr(numt, desired_transport) = -1) then
+                                writeln('there is no such city');
+                        except
+                            on EInOutError do
+                                writeln('wrong input');
                         end;
                     end;
-            end;
-            //dijkstra(GM: array of vertex; st: integer; dt: burn_in_hell; mode, end_lim, is_mode_4: integer);
-            case oper_mode of
-                '1':
-                    dijkstra(graph, cf, desired_transport, 1, ct, 1);
-                '2':
-                    dijkstra(graph, cf, desired_transport, 2, ct, 0);
-               {'3':
-                    //присвоить каждой веришине стоимость 1 + классический алгоритм
-                    запрос двух городов}
-                '4':
-                    dijkstra(graph, cf, desired_transport, 4, lc, 1);
-                '5':
-                    dijkstra(graph, cf, desired_transport, 5, lt, 0);
+
+                    del_el_val(-2, desired_transport);
+                    //writeln();//ошибки при повторной работе, ошибки при 
+                end
+                else begin
+                    writeln('enter the types of transport that you want to use(-1 to end)');
+                    for i := 0 to length(desired_transport) - 1  do
+                        desired_transport[i] := -1;
+                    i := 0;
+                    while (i < length(desired_transport)) and (numt <> -2) do begin
+                        try
+                            write('>'); 
+                            read(numt); 
+                            numt := numt - 1;
+                            readln();
+                            if (numt < length(types_transport)) and (numt >= 0) and (in_darr(numt, desired_transport) = -1) then begin
+                                desired_transport[i] := numt;
+                                i := i + 1;
+                            end
+                            else if (numt <> -2) and (in_darr(numt, desired_transport) = -1) then
+                                writeln('there is no such city');                      
+                        except
+                            on EInOutError do 
+                                writeln('wrong input');   
+                        end;
+                    end;
+                    setLength(desired_transport, i);
+                end;
+                
+                writeln('enter the operating mode(enter a number)');
+                writeln('1. Among the shortest paths in time between two cities, find the path of the minimum cost.');
+                writeln('2. Among the paths between two cities, find the path of minimum cost.');
+                writeln('3. Find the path between 2 cities minimum by the number of cities visited.');
+                writeln('4. Find a set of cities reachable from the city of departure for no more than limit_cost money.');
+                writeln('5. Find a set of cities reachable from the senders city in no more than limit_time of time.');
+                oper_mode := get_chr_in_ab('1', '5');
+                
+                for i := 0 to length(cities) - 1  do begin
+                    write(i + 1, '. ');
+                    print_arr(cities[i]);
+                    writeln();
+                end;
+                case oper_mode of
+                    '1', '2', '3':
+                        begin
+                            writeln('enter city of departure');
+                            cf := get_num_in_ab(0, length(cities)) - 1;
+                            writeln('enter destination city');
+                            ct := get_num_in_ab(0, length(cities)) - 1;
+                        end;
+                    '4', '5':
+                        begin
+                            writeln('enter city of departure');
+                            cf := get_num_in_ab(0, length(cities)) - 1;
+                            if oper_mode = '4' then begin 
+                                writeln('enter limit cost');
+                                lc := get_num_in_ab(-maxint, maxint);
+                            end
+                            else begin 
+                                writeln('enter limit time');
+                                lt := get_num_in_ab(-maxint, maxint);
+                            end;
+                        end;
+                end;
+                //dijkstra(GM: array of vertex; st: integer; dt: burn_in_hell; mode, end_lim, is_mode_4: integer);
+                case oper_mode of
+                    '1':
+                        dijkstra(graph, cf, desired_transport, 1, ct, 1);
+                    '2':
+                        dijkstra(graph, cf, desired_transport, 2, ct, 0);
+                    '3':
+                        bfs(graph, cf, ct);
+                    '4':
+                        dijkstra(graph, cf, desired_transport, 4, lc, 1);
+                    '5':
+                        dijkstra(graph, cf, desired_transport, 5, lt, 0);
+                end;
             end;
         end;
     end;
