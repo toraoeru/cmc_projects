@@ -1,5 +1,0 @@
-"sovngard" "moscow" "space landing" 10 10
-"moscow" "katmandu" "ship" 10 10
-#AAAAAAAAAAAAAAAAAAAAAAA
-"katmandu" "kiev" "rocket" 10 10
-"sovngard" "kiev" "mole" 10 100
