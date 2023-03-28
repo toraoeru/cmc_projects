@@ -13,6 +13,7 @@ type
     end;
 
     states = (form_exp, form_ent, size_exp, row_ent, coln_ent, sp_cont, den_cont);
+    readin_nums_st = (num_exp, int_part, frac_part, eoln_exp, new_line_exp);
 
 var 
     matrix, indx: text;
@@ -31,9 +32,9 @@ end;
 
 procedure edit_index();
 
-Procedure InsRec(Var Tree : U; x : BT);
-Begin
-   If Tree = Nil
+procedure add(var tree: tree_node_t; node_num, row, col: longword; el: double);
+begin
+   if Tree = Nil
    Then Begin 
 	    New(Tree);
 	    Tree^.L := Nil;
@@ -43,12 +44,13 @@ Begin
    Else If x < Tree^.inf
 	Then InsRec(Tree^.L, x)
 	Else InsRec(Tree^.R, x)
-End;
+end;
 
 procedure create_index();
 var 
-    format, state: states; row_n, coln_n, i: integer;
+    format, state: states; row_n, coln_n, i, row, col, step: integer;
     c: char; is_error: boolean; format_name: string;
+    num_readin_st: readin_nums_st; val: double;
 begin
     state := form_exp;
     is_error := false;
@@ -57,17 +59,20 @@ begin
         case state of
             form_exp:
                 begin
-                    read(matrix, c);
-                    if (c = '#') or eoln(matrix) then readln(matrix)
-                    else if c = SP_FLAG[1] then begin 
-                        state := form_ent;
-                        form_name := SP_FLAG;
+                    if not eoln(matrix) then begin
+                        read(matrix, c);
+                        if (c = '#') or eoln(matrix) then readln(matrix)
+                        else if c = SP_FLAG[1] then begin 
+                            state := form_ent;
+                            form_name := SP_FLAG;
+                        end
+                        else if c = DEN_FLAG[1] then begin
+                            state := form_ent;
+                            form_name := DEN_FLAG;
+                        end
+                        else is_error := true;
                     end
-                    else if c = DEN_FLAG[1] then begin
-                        state := form_ent;
-                        form_name := DEN_FLAG;
-                    end
-                    else is_error := true;
+                    else readln(matrix);
                 end;
             form_ent:
                 begin
@@ -129,8 +134,59 @@ begin
                 end;
             sp_cont:
                 begin
+                //while...
 
+                    case num_readin_st of 
+                        new_line_exp:
+                            begin
+                                if eoln(matrix) then readln(matrix)
+                                else num_readin_st := num_exp;
+                            end;
+                        num_exp:
+                            begin
+                                read(matrix, c);
+                                if c in '1234567890' then begin
+                                    state := int_part;
+                                    step := step + 1;
+                                    if row = 0 then row := strtoint(c)
+                                    else if col = 0 col := strtoint(c)
+                                    else val := strtoint(c);
+                                end
+                                else if c <> ' ' then is_error := true;
+                            end;
+                        int_part:
+                            begin
+                                if not eoln() then begin
+                                    read(matrix, c);
+                                    if c in '1234567890' then begin
+                                        if step = 1 then row := row + strtoint(c)
+                                        else if step = 2 then col := col + strtoint(c)
+                                        else val := val + strtoint(c);
+                                    end
+                                    else if (c = '.') and (step = 3) then state := frac_part
+                                    else if (c = ' ') and (step = 3) then begin
+                                       //если это корень
+                                       add(tr_matrix, num_edge, row, col, val) ;
+                                       //обнулить все
+                                       readln(matrix);
+                                    end
+                                    else if c = ' ' then state := num_exp
+                                end
+                                else if step = 3 then begin
+                                    //если это корень
+                                    add(tr_matrix, num_edge, row, col, val) ;
+                                    //обнулить все
+                                    readln(matrix)
+                                end
+                                else is_error := true;
+                            end;
+                        frac_part: 
+                            begin
+                                
+                            end;
+                    end;
                 end;
+        end;
     end;
 
 end;
