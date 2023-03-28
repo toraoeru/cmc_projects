@@ -5,7 +5,7 @@ uses {$IFDEF UNIX} cthreads, {$ENDIF}ptcGraph, SysUtils;
 CONST
     deltaX = 0.01;
     Inf = 3.4e38;
-    eps = 0.0001;
+    eps = 0.001;
 
 type 
     tfunc = function (arg1: double) : double;
@@ -24,7 +24,7 @@ end;
 
 function f2(x: double): double;
 begin
-    f2 := 2.5*x - 9.5;
+    f2 := 2.5*x -19.5;
 end;
 
 function df2(x: double): double;
@@ -105,55 +105,56 @@ begin
     d := 1;
     n := 1;
     while (abs(d) > eps2) do begin
-        writeln('step ', round(ln(n)/ln(2)));
+        writeln('step ', round(ln(n)/ln(2)) + 1);
         d := (int_sim(f, g, a, b, n * 2) - int_sim(f, g, a, b, n)) / 15;
         n := n * 2;
         if (n > exp(15*ln(2))) then break;
     end;
+    writeln();
     s := abs(int_sim(f, g, a, b, n));
     integral := s + d / 2;
 end;
 
 
-PROCEDURE PlotGraph (func: tfunc; x0, y0, CanvasWidth, CanvasHeight, color: Integer; a, b: Double; flag: boolean);
-    VAR
+procedure PlotGraph (func: tfunc; x0, y0, CanvasWidth, CanvasHeight, color: Integer; a, b: Double; flag: boolean);
+    var
         K: Double; 
         Cx, Cy: Integer; 
 
-    FUNCTION PixelCoordX (xx: Double): Integer;
-    BEGIN
+    function PixelCoordX (xx: Double): Integer;
+    begin
         PixelCoordX := x0 + Cx + Round( xx * K)
-    END;
+    end;
 
-    FUNCTION PixelCoordY (yy: Double): Integer;
-    BEGIN
+    function PixelCoordY (yy: Double): Integer;
+    begin
         PixelCoordY := y0 + Cy - Round( yy * K )
-    END;
+    end;
 
-    PROCEDURE PlotAxes;
-        CONST h = 0.2 / 3.0;
-        VAR r: Double;
-    BEGIN
+    procedure PlotAxes;
+        const h = 0.2 / 3.0;
+        var r: Double;
+    begin
         Line(x0, y0 + Cy, x0 + CanvasWidth - 1, y0 + Cy);
         Line(x0 + Cx, y0, x0 + Cx, y0 + CanvasHeight - 1);
  
         r := Trunc(a);
-        WHILE r <= Trunc(b) DO
-        BEGIN
+        while r <= Trunc(b) DO
+        begin
             Line(PixelCoordX (r), PixelCoordY (0), PixelCoordX (r), PixelCoordY (-h));
             OutTextXY(PixelCoordX (r - h), PixelCoordY (-h), IntToStr(Round(r)));
             Line(PixelCoordX (0), PixelCoordY (r), PixelCoordX (-h), PixelCoordY (r));
-            IF r <> 0 THEN
+            IF r <> 0 then
                 OutTextXY(PixelCoordX (h), PixelCoordY (r + h), IntToStr(Round(r)));
             r := r + 1.0;
-        END;
-    END;
+        end;
+    end;
  
-    VAR
+    var
         x, y: Double;
         px, py: Integer;
-BEGIN
-    IF b <= a THEN Exit;
+begin
+    IF b <= a then Exit;
     Cx := CanvasWidth DIV 2;
     Cy := CanvasHeight DIV 2;
     
@@ -169,42 +170,43 @@ BEGIN
  
     MoveTo(px, py);
  
-    WHILE x <= b DO
-    BEGIN
+    while x <= b DO
+    begin
         if flag and (x > find_m(x12, x23, x13, false)) and (x < find_m(x12, x23, x13, true) )then
             Line(PixelCoordX(x), PixelCoordY(func(x)), PixelCoordX(x), PixelCoordY(find_m(f3(x), f2(x), -1000, true)));
         y := func(x); 
         px := PixelCoordX(x);
         py := PixelCoordY(y);
  
-        IF y < Inf THEN
+        IF y < Inf then
             LineTo (px, py);
  
         x := x + deltaX
-    END;
-END;
+    end;
+end;
  
-VAR
+var
     gd, gm: smallint;
-BEGIN
+begin
     GD := VGA; GM := VGAHi; InitGraph(GD, GM, '');
     root(@f1, @f2, @df1, @df2, find_initial(@f1, @f2), eps, x12);
     root(@f1, @f3, @df1, @df3, find_initial(@f1, @f3), eps, x13);
     root(@f2, @f3, @df2, @df3, find_initial(@f2, @f3), eps, x23);
+    write('s = ');
     if (x12 <= x13) and (x13 <= x23) then
-        writeln(abs(integral(@f1, @f2, x12, x13, eps)) + abs(integral(@f2, @f3, x13, x23, eps)))
+        writeln(abs(integral(@f1, @f2, x12, x13, eps)) + abs(integral(@f2, @f3, x13, x23, eps)):1:10)
     else if (x12 <= x23) and (x23 <= x13) then
-        writeln(abs(integral(@f1, @f2, x12, x23, eps)) + abs(integral(@f1, @f3, x23, x13, eps)))
+        writeln(abs(integral(@f1, @f2, x12, x23, eps)) + abs(integral(@f1, @f3, x23, x13, eps)):1:10)
     else if (x13 <= x23) and (x23 <= x12) then
-        writeln(abs(integral(@f1, @f3, x13, x23, eps)) + abs(integral(@f1, @f2, x23, x12, eps)))
+        writeln(abs(integral(@f1, @f3, x13, x23, eps)) + abs(integral(@f1, @f2, x23, x12, eps)):1:10)
     else if (x13 <= x12) and (x12 <= x23) then
-        writeln(abs(integral(@f1, @f3, x13, x12, eps)) + abs(integral(@f2, @f3, x12, x23, eps)))
+        writeln(abs(integral(@f1, @f3, x13, x12, eps)) + abs(integral(@f2, @f3, x12, x23, eps)):1:10)
     else if (x23 <= x13) and (x13 <= x12) then
-        writeln(abs(integral(@f2, @f3, x23, x13, eps)) + abs(integral(@f1, @f2, x13, x12, eps)))
+        writeln(abs(integral(@f2, @f3, x23, x13, eps)) + abs(integral(@f1, @f2, x13, x12, eps)):1:10)
     else if (x23 <= x12) and (x12 <= x13) then
-        writeln(abs(integral(@f2, @f3, x23, x12, eps)) + abs(integral(@f1, @f3, x12, x13, eps)));
+        writeln(abs(integral(@f2, @f3, x23, x12, eps)) + abs(integral(@f1, @f3, x12, x13, eps)):1:10);
 
-    IF GraphResult <> grOK THEN Exit;
+    IF GraphResult <> grOK then Exit;
  
     PlotGraph(@f1, 0, 0, GetMaxX(), GetMaxY(), 5, -10.0, 10.0, true);
     OutTextXY (20, 20,'y=3/2/(x+1)+3');
@@ -214,4 +216,4 @@ BEGIN
     OutTextXY (20, 60,'y=5/x');
     readln;
     CloseGraph;
-END.//форматирование, доробатать вывод по шагам, условие на штриховку
+end.//форматирование, доробатать вывод по шагам, условие на штриховку
