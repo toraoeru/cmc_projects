@@ -6,7 +6,7 @@ uses sysutils, math;
 
 const 
     WRONG_CHAR_FNAME = ['\', '/', ':', '*', '?', '"', '>', '<', '|', '+', '=', '[', ']', ';'];
-    MAX_VAL = 10000000;
+    MAX_VAL = 1000000;
     SPACE_ST = '        ';
 
 type 
