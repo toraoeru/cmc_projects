@@ -7,6 +7,7 @@ Uses
 var 
     matrix, indx: text; tr_matrix: tr_ptr;
 
+
 begin
     if paramCount() = 0 then 
         writeln('specify the file with the matrix')

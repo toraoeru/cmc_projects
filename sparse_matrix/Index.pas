@@ -5,6 +5,7 @@ Uses Utils_, sysutils;
 const 
     SP_FLAG = 'sparse_matrix';
     DEN_FLAG = 'dence_matrix';
+    SELF_RESPECT = 0.0000001;
 
 type
     tr_ptr= ^tree_node;
@@ -23,6 +24,8 @@ procedure create_index(var matrix, indx: text; var tr_matrix: tr_ptr; print_file
 procedure pr_edges(tree: tr_ptr; var indx: text);
 function compare_indx(x1, y1, x2, y2: integer): boolean;
 procedure add(var tree: tr_ptr; node_num, row, col: longword; el: double);
+function find(tree: tr_ptr; x, y: integer): boolean;
+function return_parent(tree: tr_ptr; x, y: integer): tr_ptr;
 
 Implementation
 
@@ -32,12 +35,26 @@ begin
         find := false;
         exit;
     end;
-    if (x = tree^.row) and (y = tree^.column) then
-        find := true;
+    if (x = tree^.row) and (y = tree^.column) then 
+        find := true
     else
-    if compare_indx(row, col, tree^.row, tree^.column) then
+    if compare_indx(x, y, tree^.row, tree^.column) then
         find := find(tree^.left, x, y)
     else find := find(tree^.right, x, y);
+end;
+
+function return_parent(tree: tr_ptr; x, y: integer): tr_ptr;
+begin
+    if tree = nil then begin
+        return_parent := nil;
+        exit;
+    end;
+    if ((x = tree^.left^.row) and (y = tree^.left^.column)) or ((x = tree^.right^.row) and (y = tree^.right^.column)) then
+        return_parent := tree
+    else
+    if compare_indx(x, y, tree^.row, tree^.column) then
+        return_parent := return_parent(tree^.left, x, y)
+    else return_parent := return_parent(tree^.right, x, y);
 end;
 
 procedure pr_edges(tree: tr_ptr; var indx: text);
@@ -86,7 +103,7 @@ begin
 	else add(tree^.right, node_num, row, col, el);
 end;
 
-procedure create_index(var matrix, indx: text; var tr_matrix: tr_ptr print_file: boolean);
+procedure create_index(var matrix, indx: text; var tr_matrix: tr_ptr; print_file: boolean);
 var 
     format, state: states; 
     row_n, coln_n, i, row, col, step, str_num, cur_col, sign: integer;
@@ -254,7 +271,7 @@ begin
                                             if in_str(c, '1234567890') then 
                                                 fr_p := fr_p*10 + strtoint(c)
                                             else if c = ' ' then begin
-                                                if fr_p > 0.000001 then
+                                                if fr_p > SELF_RESPECT then
                                                     val := val + fr_p/ exp(ln(10) * (trunc(ln(fr_p)/ln(10)) + 1));
                                                 next_num();
                                             end                                                
@@ -262,7 +279,7 @@ begin
                                         end;
                                     end
                                     else if cur_col = (coln_n  - 1) then begin 
-                                        if fr_p > 0.000001 then
+                                        if fr_p > SELF_RESPECT then
                                             val := val + fr_p/ exp(ln(10) * (trunc(ln(fr_p)/ln(10)) + 1));
                                         next_num();
                                         bl_den();
@@ -322,13 +339,15 @@ begin
                                         if in_str(c, '1234567890') then 
                                             fr_p := fr_p + strtoint(c)
                                         else if (c = '#') or (c = ' ') then begin
-                                            val := val + fr_p/ exp(ln(10) * (trunc(ln(fr_p)/ln(10)) + 1));
+                                            if fr_p > SELF_RESPECT then
+                                                val := val + fr_p/ exp(ln(10) * (trunc(ln(fr_p)/ln(10)) + 1));
                                             break_line();
                                         end                                                
                                         else is_error := true;
                                     end
                                     else begin
-                                        val := val + fr_p/ exp(ln(10) * (trunc(ln(fr_p)/ln(10)) + 1));
+                                        if fr_p > SELF_RESPECT then
+                                            val := val + fr_p/ exp(ln(10) * (trunc(ln(fr_p)/ln(10)) + 1));
                                         break_line();
                                     end;
                                 end;

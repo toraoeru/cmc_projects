@@ -98,7 +98,7 @@ begin
         until not in_arr(ri, rj, i, used_item);
         used_item[i, 1] := ri;
         used_item[i, 2] := rj;
-        if mode = 2 then writeln(tfile, ri, SPACE_ST, rj, SPACE_ST, (random(MAX_VAL) - MAX_VAL/2 + random()):10:10)
+        if mode = 2 then writeln(tfile, ri, SPACE_ST, rj, SPACE_ST, (random(MAX_VAL) - MAX_VAL/2 + random()):10:5)
         else if mode < 4 then writeln(tfile, ri, SPACE_ST, rj, '    1');
     end;
     if mode > 3 then begin
@@ -106,7 +106,7 @@ begin
             for j := 1 to coln_n do begin
                 if in_arr(i, j, length(used_item), used_item) then begin
                     if mode = 5 then
-                        write(tfile, (random(MAX_VAL) - MAX_VAL/2 + random()):10:10)
+                        write(tfile, (random(MAX_VAL) - MAX_VAL/2 + random()):10:5)
                     else 
                         write(tfile, 1);
                 end

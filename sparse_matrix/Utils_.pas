@@ -1,6 +1,6 @@
 unit Utils_;
 Interface
-
+const SPACE_ST = '        ';
 function slice(str: string; a, b: integer): string;
 function in_str(ch: char; str: string): boolean;
 
