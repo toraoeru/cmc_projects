@@ -2,27 +2,29 @@ program bulletinmyhead;
 {$mode objfpc}
 Uses Index, RegExpr, Utils_, sysutils;
 
-const PATTERN_EL = '\s*\d+[.]?\d*'; //?????????
+const PATTERN_EL = '\s*[+-]?([0-9]*[.])?[0-9]+'; //?????????
 
 function replace_occur(str, pattern, rep_str: string; num: integer): string;
-var i, j: integer; substr, res: string; re: TRegExpr;
+var i, j: integer; res: string; c: char;
 begin
-    substr := ''; j := 0; res := ''; i := 1;
-    re := TRegExpr.Create(pattern);
-    while (j <> num) and (i <= length(str)) do begin
-        substr := substr + str[i];
-        inc(i);
-        if ((not re.Exec(substr)) and (re.Exec(slice(substr, 1, length(substr) - 1))))
-        or ((i = length(str)) and re.Exec(substr)) then begin
+    j := 1; res := ''; i := 1; c := 'b';
+    //re := TRegExpr.Create(pattern); substr := '';
+    //(str[i] = ' ') or in_str(c, '1234567890') or 
+    while ((j <> num)) and (i <= length(str)) do begin
+        //writeln(str[i], '! ', in_str(str[i], '1234567890'), ' -', c = ' ', '- ', j);
+        if in_str(str[i], '1234567890') and (c = ' ') then begin
             inc(j);
-            substr := '';
-            res := res + substr;
-        end;
+            if j <> num then res := res + str[i];
+        end
+        else res := res + str[i];
+        c := str[i];
+        inc(i);
     end;
-    res := res + rep_str;
-    re := TRegExpr.Create('\s[+-]?([0-9]*[.])?[0-9]+\s');
-    while (not re.Exec(substr)) and (i <= length(str)) do begin
-        substr := substr + str[i];
+    //write(j, slice(str, 1, i));
+    res := res + rep_str + SPACE_ST;
+    //re := TRegExpr.Create('\s[+-]?([0-9]*[.])?[0-9]+\s');
+    while (not (in_str(str[i], '1234567890') and (c = ' '))) and (i <= length(str)) do begin
+        c := str[i];
         inc(i);
     end;
     res := res + slice(str, i, length(str));
@@ -31,7 +33,7 @@ end;
 
 var 
     ttemp, mtr_tr: tr_ptr; r_n, c_n, des_num, i, j, node_num: integer; val_n: doubLe;
-    matrix,f, ind_f: text; str, pattern_str, lab_pat: string; 
+    matrix,f, fi, ind_f: text; str, pattern_str, lab_pat, str_lab : string; 
     re: TRegExpr; flag: boolean;
 
 begin
@@ -84,17 +86,22 @@ begin
             end
             else begin
                 writeln('in dmtr');
-                pattern_str := PATTERN_EL;
+                //pattern_str := PATTERN_EL;
                 //for i := 2 to c_n do
                 //    pattern_str := pattern_str + PATTERN_EL;
-                i := 1;
+                i := 0;
                 re := TRegExpr.Create(PATTERN_EL);
                 rewrite(f); flag := true;
                 while not eof(matrix) do begin
                     readln(matrix, str);
-                    if re.Exec(str) then inc(i);
-                    if (i = r_n) then //////////
-                        writeln(f, replace_occur(str, pattern_str, floattostr(val_n), c_n))
+                    //writeln(i,' ', r_n);
+                    if re.Exec(str) and (pos('#', str) = 0) and (pos('matrix', str) = 0) then inc(i);
+                    //writeln(i,' ', r_n);
+                    if (i = r_n) and flag then begin//////////
+                        flag := false;
+                        writeln(f, replace_occur(str, PATTERN_EL, floattostr(val_n), c_n));
+                        //write('kljfhlskjd');
+                    end
                     else 
                         writeln(f, str);
                 end;
@@ -104,7 +111,10 @@ begin
                 rename(f, paramStr(1));
                 matrix := f;
             end;
-            {assign(ind_f, slice(paramStr(1), 1, length(paramStr(1)) - 4) + 'dot');
+            //добавление копии все стирает
+            // не работает для сущ
+            assign(ind_f, slice(paramStr(1), 1, length(paramStr(1)) - 4) + 'dot');
+            assign(fi, 'temp.tr');
             writeln('am i alive&');
             {$I-} reset(ind_f); {$I+}
             writeln('am i alive&');
@@ -113,61 +123,62 @@ begin
                 //fuckkkkkkkkkkkkkkkkkkkkkkkkkkkkfhojdkedassncsvcbhjtxdgr']AQGT5SHFV.":
                 if find(mtr_tr, r_n, c_n) then begin
                     writeln('in edge find');
-                    lab_pat := '\s*\d\s*[label="' + inttostr(r_n) + '\s*' + inttostr(c_n) + '\\n\s';
-                    rewrite(f); 
+                    lab_pat := '\s*\d*\s*[label="' + inttostr(r_n) + '\s*' + inttostr(c_n);
+                    rewrite(fi); 
                     re := TRegExpr.Create(lab_pat);
                     while (not eof(ind_f)) and (pos('//edges', str) <> 0) do begin
                         readln(ind_f, str);
-                        if re.Exec(str) then writeln(f, slice(str, 1, pos('[', str)), ' [label="', r_n, '  ', c_n, '\n    ', val_n, '"];')
-                        else writeln(f, str);
+                        if re.Exec(str) then writeln(fi, slice(str, 1, pos('[', str)), ' [label="', r_n, '  ', c_n, '\n    ', val_n, '"];')
+                        else writeln(fi, str);
                     end;
                 end
                 else begin
                     writeln('in edge not found');
-                    i := 0;
-                    while (not eof(ind_f)) and (pos('//edges', str) <> 0) do begin
+                    i := 0; str_lab := '';
+                    while (not eof(ind_f)) and (pos('//edges', str) = 0) do begin
                         readln(ind_f, str);
                         inc(i);
+                        if pos('label', str) <> 0 then str_lab := str_lab + inttostr(i);
                     end;
-                    writeln('fgjlsldf');
                     reset(ind_f);
-                    writeln('fgjlsldf');
-                    rewrite(f); 
-                    for j := 0 to i - 1 do begin
+                    rewrite(fi); 
+                    for j := 1 to strtoint(slice(str_lab, length(str_lab) - 1, length(str_lab))) do begin/////////
                         readln(ind_f, str);
-                        writeln(f, str);
+                        writeln(fi, str);
+                        writeln(str);
                     end;
                     node_num := strtoint(slice(str, 1, pos('[', str))) + 1;
-                    writeln(f, node_num, ' [label="', r_n, '  ', c_n, '\n    ', val_n, '"];');
+                    //(slice(str, 1, pos('[', str)));
+                    writeln(fi, node_num, ' [label="', r_n, '  ', c_n, '\n    ', val_n, '"];');
                     add(mtr_tr,  pos('[', str) + 1, r_n, c_n, val_n);
                     ttemp := return_parent(mtr_tr, r_n, c_n);
                     if (ttemp^.left = nil) or (ttemp^.right = nil) then begin
                         writeln('in 1 child');
                         while not eof(ind_f) do begin
                             readln(ind_f, str);
-                            writeln(f, str);
+                            writeln(fi, str);
                         end;
-                        if (ttemp^.left = nil) then writeln(f,  #9, ttemp^.node_number, '  ->  ', node_num, '  [label="R"];')
-                        else writeln(f,  #9, ttemp^.node_number, '  ->  ', node_num, '  [label="L"];');
+                        if (ttemp^.left = nil) then writeln(fi,  #9, ttemp^.node_number, '  ->  ', node_num, '  [label="R"];')
+                        else writeln(fi,  #9, ttemp^.node_number, '  ->  ', node_num, '  [label="L"];');
                     end
                     else begin
                         writeln('in 2 child');
                         while not eof(ind_f) do begin
                             readln(ind_f, str);
                             if pos(inttostr(ttemp^.node_number), slice(str, 1, pos('[', str))) <> 0 then begin
-                                write(f, str);
-                                if pos('R', str) <> 0 then writeln(f,  #9, ttemp^.node_number, '  ->  ', node_num, '  [label="L"];')
-                                else writeln(f,  #9, ttemp^.node_number, '  ->  ', node_num, '  [label="R"];'); 
+                                write(fi, str);
+                                if pos('R', str) <> 0 then writeln(fi,  #9, ttemp^.node_number, '  ->  ', node_num, '  [label="L"];')
+                                else writeln(fi,  #9, ttemp^.node_number, '  ->  ', node_num, '  [label="R"];'); 
                             end
-                            else writeln(f, str);
+                            else writeln(fi, str);
                         end;
                     end;
                 end;
-                close(f); 
+                close(fi); 
                 close(ind_f);
                 erase(ind_f);//////////////
-                rename(f, slice(paramStr(1), 1, length(paramStr(1)) - 4) + 'dot');
-                ind_f := f;
+                rename(fi, slice(paramStr(1), 1, length(paramStr(1)) - 4) + 'dot');
+                ind_f := fi;
             end
             else begin
                 writeln('dot not exist');
@@ -180,6 +191,7 @@ begin
                 close(ind_f);
                 close(matrix);
             end;
+            
         end    
         else 
             writeln('there is no such file');
