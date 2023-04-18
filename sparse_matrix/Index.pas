@@ -5,7 +5,7 @@ Uses Utils_, sysutils;
 const 
     SP_FLAG = 'sparse_matrix';
     DEN_FLAG = 'dence_matrix';
-    SELF_RESPECT = 0.0000001;
+    SELF_RESPECT = 0.00001;
 
 type
     tr_ptr= ^tree_node;
@@ -49,10 +49,11 @@ begin
         return_parent := nil;
         exit;
     end;
-    if ((x = tree^.left^.row) and (y = tree^.left^.column)) or ((x = tree^.right^.row) and (y = tree^.right^.column)) then
+    writeln(tree^.row, ' ', tree^.column);
+    if ((tree^.left <> nil) and (x = tree^.left^.row) and (y = tree^.left^.column)) or
+     ((tree^.right <> nil) and (x = tree^.right^.row) and (y = tree^.right^.column)) then
         return_parent := tree
-    else
-    if compare_indx(x, y, tree^.row, tree^.column) then
+    else if compare_indx(x, y, tree^.row, tree^.column) then
         return_parent := return_parent(tree^.left, x, y)
     else return_parent := return_parent(tree^.right, x, y);
 end;
@@ -64,7 +65,8 @@ begin
         if tree^.left <> nil then 
             write(indx, #9, tree^.node_number, '  ->  ', tree^.left^.node_number, '  [label="L"];');
         if tree^.right <> nil then 
-            writeln(indx, #9,  tree^.node_number, '  ->  ', tree^.right^.node_number, '  [label="R"];');
+            writeln(indx, #9,  tree^.node_number, '  ->  ', tree^.right^.node_number, '  [label="R"]')
+        else if tree^.left <> nil then writeln(indx);
         pr_edges(tree^.right, indx) ;
     end;
 end;
@@ -141,6 +143,7 @@ begin
     state := form_exp; str_num := 0;
     is_error := false; val := 0; fr_p := 0;
     i := 2; val := 0; cur_col := 0; step := 0;
+    row := 0; col := 0;
     while (not eof(matrix)) and (not is_error) do begin
         case state of
             form_exp:
@@ -271,16 +274,21 @@ begin
                                             if in_str(c, '1234567890') then 
                                                 fr_p := fr_p*10 + strtoint(c)
                                             else if c = ' ' then begin
-                                                if fr_p > SELF_RESPECT then
+                                                if fr_p > SELF_RESPECT then begin
+                                                    //writeln('1fjksdfsd');
                                                     val := val + fr_p/ exp(ln(10) * (trunc(ln(fr_p)/ln(10)) + 1));
+
+                                                end;
                                                 next_num();
                                             end                                                
                                             else is_error := true;
                                         end;
                                     end
                                     else if cur_col = (coln_n  - 1) then begin 
-                                        if fr_p > SELF_RESPECT then
+                                        if fr_p > SELF_RESPECT then begin
+                                            //writeln('2fjksdfsd');
                                             val := val + fr_p/ exp(ln(10) * (trunc(ln(fr_p)/ln(10)) + 1));
+                                        end;
                                         next_num();
                                         bl_den();
                                     end
@@ -340,14 +348,20 @@ begin
                                             fr_p := fr_p + strtoint(c)
                                         else if (c = '#') or (c = ' ') then begin
                                             if fr_p > SELF_RESPECT then
+                                            begin
+                                                //writeln('3fjksdfsd');
                                                 val := val + fr_p/ exp(ln(10) * (trunc(ln(fr_p)/ln(10)) + 1));
+                                            end;
                                             break_line();
                                         end                                                
                                         else is_error := true;
                                     end
                                     else begin
                                         if fr_p > SELF_RESPECT then
+                                        begin
+                                            //writeln('4fjksdfsd');
                                             val := val + fr_p/ exp(ln(10) * (trunc(ln(fr_p)/ln(10)) + 1));
+                                        end;
                                         break_line();
                                     end;
                                 end;
