@@ -47,7 +47,7 @@ procedure sort(var crs: crs_help);
 var i, j: integer; k: double;
 begin
     for i := 0 to length(crs) - 1 do begin
-        for j := 1 to length(crs) - i do begin
+        for j := 0 to length(crs) - i - 2 do begin
             if crs[j, 1] > crs[j + 1, 1] then begin
                 k := crs[j, 1];
                 crs[j, 1] := crs[j + 1, 1];
@@ -86,8 +86,46 @@ begin
     num_sotr_ar := res;
 end;}
 
-function mult(m1, m2:mtr_crs): mtr_crs;
+function el_exist(m: crs_help, a:array[1..3] of double): boolean;
+var res:boolean; i: integer;
 begin
+    res := false;
+    for i := 0 to length(m) do begin
+        if m[i] = a then res:= true;
+    end
+    el_exist := res;
+end;
+
+function get_count(m: crs_help, n: double):integer;
+var res, i: integer;
+begin
+    res := 0;
+    for i := 0 to length(m) do begin
+        if m[i,1] - n < SELF_RESPECT then
+            inc(res)
+    end
+    get_count := res;
+end;
+
+
+
+function mult(m1, m2:mtr_crs; x,y: integer): mtr_crs;
+var i1, i2, si, count:integer; res: mtr_crs;
+begin
+    i1 := 0; 
+    setlength(res, x*y);
+    while i1 < length(m1) do begin
+        si := 0;
+        while si < get_count(m1, m1[i1, 1]) do begin
+            if el_exist(m2, m1[si+i1]) then begin
+                res[count, 1] := m1[i1, 1];
+                res[count, 2] := m1[i1+si, 2];
+                res[count, 3] := m1[i1+si, 3];
+            end;
+        
+        end;
+    end;
+    setlength(res, count);
 end;
 
 function build_crs(var matrix: text; is_tr, is_smtr: boolean; row_n, coln_n: integer): mtr_crs;
@@ -98,7 +136,6 @@ var num_readin_st: readin_nums_st;
 
     procedure break_line();//for smtr
     begin
-        writeln('wtf');
         str_num := str_num + 1; 
         if is_tr then begin 
             killme[count, 2] := row;
@@ -109,7 +146,7 @@ var num_readin_st: readin_nums_st;
             killme[count, 2] := col;
         end;
         killme[count, 3] := val*sign;
-        writeln(killme[count, 1], ' ', killme[count, 2], ' ', killme[count, 3]);
+        //writeln(killme[count, 1], ' ', killme[count, 2], ' ', killme[count, 3]);
         inc(count);
         /////////////////////////////////////////
         //add(tr_matrix, str_num, row, col, val);
@@ -124,7 +161,7 @@ var num_readin_st: readin_nums_st;
         killme[count, 1]  := str_num;
         killme[count, 2]  := cur_col;
         killme[count, 3]  := val*sign;
-        writeln(killme[count, 1], ' ', killme[count, 2], ' ', killme[count, 3]);
+        //writeln(killme[count, 1], ' ', killme[count, 2], ' ', killme[count, 3]);
         cur_col := cur_col + 1; inc(count);
         //res.value[(str_num - 1)*row_n + cur_col - 1] := val*sign;
         val := 0;  fr_p := 0; sign := 1; fr_p := 0; 
@@ -138,14 +175,15 @@ var num_readin_st: readin_nums_st;
         readln(matrix);
     end;
 begin
-    //str_num := 0; cur_col := 0; 
-    //row := 0; col := 0; val := 0;
-    sign := 1; //count := 0;
-    //setlength(killme, row_n);
+    sign := 1; 
+    num_readin_st := new_line_exp;
+    str_num := 0;
+    is_error := false; val := 0; fr_p := 0;
+    i := 2; val := 0; cur_col := 0; step := 0;
+    row := 0; col := 0;
     setlength(killme, row_n*coln_n);
     //setlength(killme, row_n*coln_n);
     if not is_smtr then begin
-        num_readin_st := new_line_exp;
         {for i := 1 to coln_n do begin
             setlength(killme[i - 1][1], coln_n);
             setlength(killme[i - 1][2], coln_n);
@@ -229,8 +267,8 @@ begin
         count := 0;
         setlength(killme, row_n*coln_n);
         //writeln( (not eof(matrix)) and (not is_error) );
-        while (not eof(matrix)) and (not is_error) do begin
-            writeln(num_readin_st);
+        while (not eof(matrix)) and (not is_error)do begin
+            //writeln(row,' ', col,' ', val:10:1,' ', str_num, ' ', num_readin_st, '   ', step);
             case num_readin_st of 
                 new_line_exp:
                     begin
@@ -255,28 +293,22 @@ begin
                     end;
                 int_part:
                     begin
+                        //writeln(row, col, val, str_num);
                         if not eoln(matrix) then begin
                             read(matrix, c);
+                            //write('!!!',c,'!!!!', step);
                             if in_str(c, '1234567890') then begin
                                 if step = 1 then row := row*10 + strtoint(c)
                                 else if step = 2 then col := col*10 + strtoint(c)
                                 else val := val*10 + strtoint(c);
                             end
                             else if (c = '.') and (step = 3) then num_readin_st := frac_part
-                            else if (c = ' ') and (step = 3) then begin
-                                writeln('br5');
-                                break_line();
-                            end
+                            else if (c = ' ') and (step = 3) then break_line()
                             else if c = ' ' then num_readin_st := num_exp
                             else is_error := true;
                         end
-                        else if step = 3 then begin
-                            writeln('br4');
-                            break_line();
-
-                        end
+                        else if step = 3 then break_line()
                         else is_error := true;
-
                     end;
                 frac_part: 
                     begin
@@ -291,36 +323,37 @@ begin
                                     //writeln('3fjksdfsd');
                                     val := val + fr_p/ exp(ln(10) * (trunc(ln(fr_p)/ln(10)) + 1));
                                 end;
-                                writeln('br2');
                                 break_line();
                             end                                                
                             else is_error := true;
                         end
                         else begin
                             if fr_p > SELF_RESPECT then
+                            begin
+                                //writeln('4fjksdfsd');
                                 val := val + fr_p/ exp(ln(10) * (trunc(ln(fr_p)/ln(10)) + 1));
-                            writeln('br');
+                            end;
                             break_line();
                         end;
                     end;
             end;
         end;
-       
+
 
     end;
-    {setlength(killme, count);
+   { setlength(killme, count);
     write(count,'           ');
     for i := 0 to length(killme) -1 do begin
         for j:=1 to 3 do
-            write(killme[i,j],'\n');
+            write(killme[i,j]:1,' ');
         writeln();
-    end;
+    end;}
 
     sort(killme);
-
+   { writeln('AFTER');
     for i := 0 to length(killme) -1 do begin
         for j:=1 to 3 do
-            write(killme[i,j],'\n');
+            write(killme[i,j]:1,'  ');
         writeln();
     end;}
     //build_crs := res;
@@ -363,7 +396,7 @@ begin
                     writeln('wrong size in ', i)
                 else begin
                     mr2 := build_crs(m2, true,not(pos('smtr',  paramStr(3)) = 0), x2, y2);
-                    mr1 := mult(mr1, mr2);
+                    mr1 := mult(mr1, mr2, x1, y2);
                 end;
             end;
             y1 := y2;
