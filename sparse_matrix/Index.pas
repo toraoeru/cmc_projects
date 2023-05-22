@@ -318,6 +318,10 @@ begin
                                         else if col = 0 then col := strtoint(c)
                                         else val := strtoint(c);
                                     end
+                                    else if c = '-' then begin
+                                        sign := -1;
+                                        num_readin_st := int_part;
+                                    end
                                     else if c <> ' ' then begin is_error := true;  end;
                                 end;
                             int_part:
