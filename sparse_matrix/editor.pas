@@ -1,4 +1,5 @@
 program bulletinmyhead;
+
 {$mode objfpc}
 Uses Index, RegExpr, Utils_, sysutils;
 
