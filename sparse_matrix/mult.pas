@@ -6,15 +6,64 @@ Uses Utils_, sysutils;
 const
     SELF_RESPECT = 0.00001;
 type
+    arri = array of integer;
+    arrd = array of double;
+
     mtr_crs = record
-        pointr: array of integer;
-        cols: array of integer;
-        value: array of integer;
+        pointr: arri;
+        cols: arri;
+        values: arrd;
     end;
 
-    crs_help = array of array[1..3] of double;
+    arr3dob =  array[1..3] of double;
+
+    crs_help = array of arr3dob;
 
     readin_nums_st = (new_line_exp, num_exp, int_part, frac_part, eoln_exp);
+
+function get_count(m: crs_help; n: integer):integer;
+var res, i: integer;
+begin
+    res := 0;
+    for i := 0 to length(m) - 1 do begin
+        if abs(m[i,1] - n) < SELF_RESPECT then
+            inc(res);
+    end;
+    get_count := res;
+end;
+
+function to_crs(m: crs_help; r:integer): mtr_crs;
+var res: mtr_crs; i: integer;
+begin
+    setlength(res.pointr, r);
+    setlength(res.cols, length(m));
+    setlength(res.values, length(m));
+    for i := 0 to length(m) - 1 do begin
+        res.cols[i] := trunc(m[i, 2]);
+        res.values[i] := m[i, 3];
+    end;
+    res.pointr[0] := 0;
+    for i := 1 to r - 1 do 
+        res.pointr[i] := res.pointr[i -1] + get_count(m, i);
+    to_crs := res;
+end;
+
+function mult_vec(c1, c2: arri; v1,v2: arrd): double;
+var i1, i2: integer; summ: double;
+begin
+    summ := 0; i1 := 0; i2 := 0;
+    while (i1 < length(c1)) and (i2 < length(c2)) do begin
+        if (c1[i1] = c2[i2]) and (v1[i1]*v2[i2] > StrToFloat(paramStr(1))) then begin
+            summ := summ + v1[i1]*v2[i2];
+            inc(i1); inc(i2);
+        end
+        else begin
+            if c1[i1] > c2[i2] then inc(i2)
+            else inc(i1);
+        end;
+    end;
+    mult_vec := summ;
+end;
 
 procedure get_size(var f: text; var x: integer; var y: integer);
 var str: string; i: integer;
@@ -74,58 +123,79 @@ begin
     end;
 end;
 
-{function num_sotr_ar(ar: , f: integer): integer;
-var i, res: integer;
-begin
-    while ar[i] <> f do inc(i);
-    inc(res);
-    while ar[i] = f do begin
-        inc(i);
-        inc(res);
-    end;
-    num_sotr_ar := res;
-end;}
 
-function el_exist(m: crs_help, a:array[1..3] of double): boolean;
+function eq_ar(a1,a2: arr3dob): boolean;
+var j, conc: integer;
+begin
+    conc := 0;
+    for j := 1 to length(a1) do begin
+        if a1[j] = a2[j] then inc(conc);
+    end;
+    if conc = length(a1) then eq_ar := true
+    else eq_ar := false;
+end;
+
+function el_exist(m: crs_help; a: arr3dob): boolean;
 var res:boolean; i: integer;
 begin
     res := false;
-    for i := 0 to length(m) do begin
-        if m[i] = a then res:= true;
-    end
+    for i := 0 to length(m) - 1 do begin
+        if eq_ar(m[i], a) then res:= true;
+    end;
     el_exist := res;
 end;
 
-function get_count(m: crs_help, n: double):integer;
-var res, i: integer;
+function slicei(ar: arri; a,b:integer): arri;
+var res: arri; i: integer;
 begin
-    res := 0;
-    for i := 0 to length(m) do begin
-        if m[i,1] - n < SELF_RESPECT then
-            inc(res)
-    end
-    get_count := res;
+    setlength(res, length(ar));
+    for i := a to b do
+        res[i-a] := ar[i];
+    slicei := res;
 end;
 
-
-
-function mult(m1, m2:mtr_crs; x,y: integer): mtr_crs;
-var i1, i2, si, count:integer; res: mtr_crs;
+function sliced(ar: arrd; a,b:integer): arrd;
+var res: arrd; i: integer;
 begin
-    i1 := 0; 
-    setlength(res, x*y);
-    while i1 < length(m1) do begin
-        si := 0;
-        while si < get_count(m1, m1[i1, 1]) do begin
-            if el_exist(m2, m1[si+i1]) then begin
-                res[count, 1] := m1[i1, 1];
-                res[count, 2] := m1[i1+si, 2];
-                res[count, 3] := m1[i1+si, 3];
+    setlength(res, length(ar));
+    for i := a to b do
+        res[i-a] := ar[i];
+    sliced := res;
+end;
+
+function mult(m1, m2: mtr_crs; x,y: integer): mtr_crs;
+var i1, i2, i,j, count: integer; res: crs_help; prev: double;
+c1, c2: arri; v1, v2: arrd;
+begin
+    setlength(res, x*y); i1 := 0; count := 0;
+    for i := 1 to x do begin
+        c1 := slicei(m1.cols, i1, i1+m1.pointr[i]-m1.pointr[i-1] - 1);
+        v1 := sliced(m1.values, i1, i1+m1.pointr[i]-m1.pointr[i-1] - 1);
+        i2 := 0;
+        for j := 1 to y do begin
+            c2 := slicei(m2.cols, i2, i2+m2.pointr[j]-m2.pointr[j-1] - 1);
+            v2 := sliced(m2.values, i2, i2+m2.pointr[j]-m2.pointr[j-1] - 1);
+            prev := mult_vec(c1, c2, v1, v2);
+            if prev > StrToFloat(paramStr(1)) then begin
+                res[count, 1] := i;
+                res[count, 2] := j;
+                res[count, 3] := prev;
+                inc(count);
             end;
-        
+            i2 := i2+m2.pointr[j]-m2.pointr[j-1];
         end;
+        i1 := i1+m1.pointr[i]-m1.pointr[i-1];
     end;
+
     setlength(res, count);
+
+    {for i := 0 to length(res) - 1 do begin
+        for j:=1 to 3 do
+            write(res[i,j]:1,' ');
+        writeln();
+    end;}
+    mult := to_crs(res, x+1);
+    
 end;
 
 function build_crs(var matrix: text; is_tr, is_smtr: boolean; row_n, coln_n: integer): mtr_crs;
@@ -137,17 +207,19 @@ var num_readin_st: readin_nums_st;
     procedure break_line();//for smtr
     begin
         str_num := str_num + 1; 
-        if is_tr then begin 
-            killme[count, 2] := row;
-            killme[count, 1] := col;
-        end
-        else begin 
-            killme[count, 1] := row;
-            killme[count, 2] := col;
+        if abs(val) > StrToFloat(paramStr(1)) then begin
+            if is_tr then begin 
+                killme[count, 2] := row;
+                killme[count, 1] := col;
+            end
+            else begin 
+                killme[count, 1] := row;
+                killme[count, 2] := col;
+            end;
+            killme[count, 3] := val*sign;
+            //writeln(killme[count, 1], ' ', killme[count, 2], ' ', killme[count, 3]);
+            inc(count);
         end;
-        killme[count, 3] := val*sign;
-        //writeln(killme[count, 1], ' ', killme[count, 2], ' ', killme[count, 3]);
-        inc(count);
         /////////////////////////////////////////
         //add(tr_matrix, str_num, row, col, val);
         //if print_file then writeln(indx, #9, str_num, ' [label="', row, '  ', col,'\n', sign*val:10:5, '"];');
@@ -158,11 +230,14 @@ var num_readin_st: readin_nums_st;
 
     procedure next_num();
     begin
-        killme[count, 1]  := str_num;
-        killme[count, 2]  := cur_col;
-        killme[count, 3]  := val*sign;
+        if abs(val) > StrToFloat(paramStr(1)) then begin
+            killme[count, 1]  := str_num;
+            killme[count, 2]  := cur_col;
+            killme[count, 3]  := val*sign;
+             inc(count);
+        end;
         //writeln(killme[count, 1], ' ', killme[count, 2], ' ', killme[count, 3]);
-        cur_col := cur_col + 1; inc(count);
+        cur_col := cur_col + 1;
         //res.value[(str_num - 1)*row_n + cur_col - 1] := val*sign;
         val := 0;  fr_p := 0; sign := 1; fr_p := 0; 
         if coln_n <> cur_col then num_readin_st := num_exp;
@@ -341,7 +416,8 @@ begin
 
 
     end;
-   { setlength(killme, count);
+    setlength(killme, count);
+   { 
     write(count,'           ');
     for i := 0 to length(killme) -1 do begin
         for j:=1 to 3 do
@@ -350,7 +426,8 @@ begin
     end;}
 
     sort(killme);
-   { writeln('AFTER');
+    build_crs := to_crs(killme, row_n + 1);
+    {writeln('AFTER');
     for i := 0 to length(killme) -1 do begin
         for j:=1 to 3 do
             write(killme[i,j]:1,'  ');
@@ -359,29 +436,38 @@ begin
     //build_crs := res;
 end;
 
+function get_col(p: arri; n: integer): integer;
+var i: integer;
+begin
+    for i := 1 to length(p) - 1 do begin
+        if n <= p[i] then exit(i);
+    end;
+end;
+
 var 
-    m1, m2: text; str, files: string; 
+    m1, m2, f: text; str, files: string; 
     mr1, mr2: mtr_crs;
-    x1, x2, y1, y2, i: integer;
+    x1, x2, y1, y2, i, j, c: integer;
 begin
     {если найдется рахреженная - результат разреженная
     првоерить размеры
     от трех аргкментов}
-    if paramCount() < 4 then
+    if paramCount() < 5 then
         writeln('wrong num of args')
     //генерим сирэс для первых двух перемножаем, получаем сирэс, строим срс для след перемножаем и тд...
     else begin
-        assign(m1, paramStr(3));
+        assign(m1, paramStr(4));
         reset(m1); {$I+} 
         if IOresult = 0 then begin
        //function build_crs(var matrix: text; is_tr, is_smtr: boolean; row_n, coln_n: integer): mtr_crs;
             get_size(m1, x1, y1);
-            mr1 := build_crs(m1, false, not(pos('smtr',  paramStr(3)) = 0), x1, y1);    
+            mr1 := build_crs(m1, false, not(pos('smtr',  paramStr(4)) = 0), x1, y1);    
+            
             //writeln('re y ok');       
         end
         else 
             writeln('file not found');
-        for i := 4 to paramCount() do begin
+        for i := 5 to paramCount() do begin
        // writeln('well');
             //проверяем размеры трансопнируем перемножаем в кур
             {$I-} assign(m2, paramStr(i));
@@ -395,23 +481,41 @@ begin
                 if y1 <> x2 then 
                     writeln('wrong size in ', i)
                 else begin
-                    mr2 := build_crs(m2, true,not(pos('smtr',  paramStr(3)) = 0), x2, y2);
+                    mr2 := build_crs(m2, true,not(pos('smtr',  paramStr(i)) = 0), y2, x2);
                     mr1 := mult(mr1, mr2, x1, y2);
                 end;
             end;
             y1 := y2;
+            
         end;
-        //srite
-        {files := '';
-        for i := 2 to paramCount() - 1 do 
-            files := files + paramStr(i);
-        if pos('smtr', files) = 0 then begin
+        close(m1);
+        close(m2);
 
+        if paramStr(2) = 'smtr' then begin
+            assign(f, paramStr(3) +'.smtr');
+            rewrite(f);
+            writeln(f, 'sparse_matrix ', x1, ' ', y2);
+            writeln(f);
+            for i := 0 to length(mr1.cols)  do 
+                writeln(f, get_col(mr1.pointr, i+1),SPACE_ST, mr1.cols[i], SPACE_ST, mr1.values[i]:10:5);
         end
         else begin
-
-        end;}
-        //if paramStr(2) = 'smtr' then begin
+            assign(f, paramStr(3) +'.dmtr');
+            rewrite(f);
+            writeln(f, 'dence_matrix ', x1, ' ', y2);
+            writeln(f); c := 0;
+            for i := 0 to x1 -1  do begin
+                for j := 0 to y1 -1  do begin
+                    if (i = get_col(mr1.pointr, c+1)) and (j = mr1.cols[c]) then begin
+                        write(f, mr1.values[c]:10:5, ' ');
+                        inc(c);
+                    end
+                    else
+                        write(f, 0);
+                end;
+                writeln(f);
+            end;
+        end;
 
     end;
 end.
