@@ -76,6 +76,9 @@ begin
     else exit;
 end;
 
+{$L ./pmode.obj}
+procedure mode_ass(var a :tr_ptr); stdcall; external name 'pr_tree';
+
 var 
     mtr_tr: tr_ptr; matrix, ind_f: text;
 begin
@@ -88,8 +91,9 @@ begin
         create_index(matrix, ind_f, mtr_tr, false);
         if paramStr(1) = '1' then
             mode1(mtr_tr)
-        else 
-            mode3(mtr_tr);
+        else if paramStr(1) = '3' then
+            mode3(mtr_tr)
+        else mode_ass(mtr_tr);
     end;
 
 end.
